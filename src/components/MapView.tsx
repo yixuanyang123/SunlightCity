@@ -531,6 +531,63 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
   })
   }
 
+  // Fetch C++ algorithm optimal route from backend and display on map
+  const handleLoadAlgorithmRoute = async () => {
+    if (typeof window === 'undefined') return
+    const token = localStorage.getItem('sc_token')
+    if (!token) {
+      let anon = localStorage.getItem('sc_anonymous_id')
+      if (!anon) {
+        anon = crypto.randomUUID?.() ?? `anon-${Date.now()}-${Math.random().toString(36).slice(2)}`
+        localStorage.setItem('sc_anonymous_id', anon)
+      }
+    }
+    const params = new URLSearchParams()
+    if (!token) {
+      const anon = localStorage.getItem('sc_anonymous_id')
+      if (anon) params.set('anonymous_id', anon)
+    }
+    const url = `${API_BASE}/optimal-route${params.toString() ? `?${params.toString()}` : ''}`
+    const headers: Record<string, string> = { Accept: 'application/json' }
+    if (token) headers.Authorization = `Bearer ${token}`
+    try {
+      const res = await fetch(url, { headers })
+      if (res.status === 404) {
+        setRoutes([])
+        setSelectedRouteId(null)
+        setRouteSummary(null)
+        return
+      }
+      if (!res.ok) throw new Error(await res.text() || res.statusText)
+      const data = await res.json()
+      const points: { lat: number; lng: number }[] = [
+        { lat: data.origin.lat, lng: data.origin.lng },
+        ...(data.waypoints || []).map((p: { lat: number; lng: number }) => ({ lat: p.lat, lng: p.lng })),
+        { lat: data.destination.lat, lng: data.destination.lng },
+      ]
+      const algorithmRoute: Route = {
+        id: 'algorithm-route',
+        points,
+        distance: data.total_distance_km ?? 0,
+        sunExposure: 50,
+        duration: data.total_time_minutes ?? 0,
+        color: '#22c55e',
+      }
+      setRoutes([algorithmRoute])
+      setSelectedRouteId(algorithmRoute.id)
+      setRouteSummary({
+        distance: algorithmRoute.distance,
+        duration: algorithmRoute.duration,
+        sunExposure: algorithmRoute.sunExposure,
+        color: algorithmRoute.color,
+      })
+    } catch (_) {
+      setRoutes([])
+      setSelectedRouteId(null)
+      setRouteSummary(null)
+    }
+  }
+
   const validateDistance = (start: Location | null, end: Location | null) => {
     if (!start || !end) {
       setDistanceError(null)

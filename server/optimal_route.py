@@ -9,6 +9,7 @@ from sqlalchemy.sql import desc
 
 from . import schemas, models
 from .database import AsyncSessionLocal
+from .auth import get_current_user_optional
 
 router = APIRouter(prefix="/optimal-route", tags=["optimal-route"])
 
@@ -67,17 +68,25 @@ async def create_optimal_route(
 
 @router.get("", response_model=schemas.OptimalRouteOut)
 async def get_latest_optimal_route(
+    current_user: models.User | None = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
-    email: str | None = Query(None, description="Filter by user email"),
-    anonymous_id: str | None = Query(None, description="Filter by anonymous_id"),
+    email: str | None = Query(None, description="Filter by user email (or use Bearer for current user)"),
+    anonymous_id: str | None = Query(None, description="Filter by anonymous_id when not logged in"),
 ):
     """
-    Get latest optimal route by user_email or anonymous_id. At least one must be provided.
+    Get latest optimal route. Use Bearer token (then by current user email), or query anonymous_id=, or email=.
     """
-    if email:
+    use_email = None
+    if current_user:
+        use_email = email.strip() if email else current_user.email
+        if email and email.strip() != current_user.email:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="email must match authenticated user")
+    elif email:
+        use_email = email.strip()
+    if use_email:
         q = (
             select(models.OptimalRoute)
-            .where(models.OptimalRoute.user_email == email.strip())
+            .where(models.OptimalRoute.user_email == use_email)
             .order_by(desc(models.OptimalRoute.created_at))
             .limit(1)
         )
@@ -90,8 +99,8 @@ async def get_latest_optimal_route(
         )
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Provide query param email= or anonymous_id=",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Provide Authorization Bearer or query anonymous_id= (or email=)",
         )
     result = await db.execute(q)
     route = result.scalars().first()
