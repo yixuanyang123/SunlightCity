@@ -45,7 +45,7 @@ async def create_optimal_route(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    C++ (or any client) submits computed optimal route. Stored in PostgreSQL/Supabase.
+    Algorithm client (e.g. Python script) submits computed optimal route. Stored in PostgreSQL/Supabase.
     Provide either anonymous_id or user_email to associate the route.
     """
     waypoints_json = [{"lat": p.lat, "lng": p.lng} for p in body.waypoints]

@@ -531,7 +531,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
   })
   }
 
-  // Fetch C++ algorithm optimal route from backend and display on map
+  // Fetch algorithm optimal route from backend and display on map
   const handleLoadAlgorithmRoute = async () => {
     if (typeof window === 'undefined') return
     const token = localStorage.getItem('sc_token')

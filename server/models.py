@@ -28,7 +28,7 @@ class Trip(Base):
 
 
 class OptimalRoute(Base):
-    """Stores optimal route from C++ algorithm for Unity/Web. One row per submission."""
+    """Stores optimal route from algorithm (Python client) for Unity/Web. One row per submission."""
     __tablename__ = "optimal_routes"
 
     id = Column(Integer, primary_key=True, index=True)
