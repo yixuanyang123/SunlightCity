@@ -1,18 +1,21 @@
 'use client'
 
-import { Map, BarChart3, Box, Settings } from 'lucide-react'
+import { Map, Sun, BarChart3, Box, Settings } from 'lucide-react'
 import React from 'react'
 
+export type TabId = 'map' | 'shade' | '3d' | 'analysis'
+
 interface SidebarProps {
-  activeTab: 'map' | 'analysis' | '3d'
-  setActiveTab: (tab: 'map' | 'analysis' | '3d') => void
+  activeTab: TabId
+  setActiveTab: (tab: TabId) => void
 }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const tabs = [
-    { id: 'map', icon: Map, label: 'Map', color: 'text-blue-400' },
-    { id: '3d', icon: Box, label: '3D Model', color: 'text-purple-400' },
-    { id: 'analysis', icon: BarChart3, label: 'Analysis', color: 'text-green-400' },
+    { id: 'map' as const, icon: Map, label: '2D Map', color: 'text-blue-400' },
+    { id: 'shade' as const, icon: Sun, label: 'Sun / Shade', color: 'text-amber-400' },
+    { id: '3d' as const, icon: Box, label: '3D Model', color: 'text-purple-400' },
+    { id: 'analysis' as const, icon: BarChart3, label: 'Analysis', color: 'text-green-400' },
   ]
 
   return (
@@ -22,7 +25,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         return (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'map' | 'analysis' | '3d')}
+            onClick={() => setActiveTab(tab.id)}
             className={`p-3 rounded-lg transition-all duration-300 ${
               activeTab === tab.id
                 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-lg shadow-yellow-500/50'

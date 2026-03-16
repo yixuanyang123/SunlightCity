@@ -51,7 +51,7 @@ export default function RealTimeData({ data, selectedCity = 'New York', error }:
   }, [selectedCity])
 
   return (
-    <div className="absolute bottom-6 right-6 bg-gray-900/95 backdrop-blur-sm border border-yellow-500/30 rounded-lg shadow-2xl w-80">
+    <div className="absolute bottom-6 right-6 z-[1000] bg-gray-900/95 backdrop-blur-sm border border-yellow-500/30 rounded-lg shadow-2xl w-80">
       {/* Header with collapse button */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
         <div>

@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import MapView from './MapView'
+import ShadeMapView from './ShadeMapView'
 import DataPanel from './DataPanel'
 import RealTimeData from './RealTimeData'
 import { CITY_COORDS } from '@/lib/cityData'
+import type { TabId } from './Sidebar'
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'map' | 'analysis' | '3d'>('map')
+  const [activeTab, setActiveTab] = useState<TabId>('map')
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number
     lng: number
@@ -98,6 +100,7 @@ export default function Dashboard() {
               weather={weather}
             />
           )}
+          {activeTab === 'shade' && <ShadeMapView />}
           {activeTab === '3d' && (
             <div className="w-full h-full bg-dark flex items-center justify-center">
               <div className="text-center text-gray-400">
@@ -117,7 +120,9 @@ export default function Dashboard() {
           )}
 
           {/* Real-time Data Panel - Only show on map and 3d */}
-          {(activeTab === 'map' || activeTab === '3d') && <RealTimeData data={weather} selectedCity={selectedCity} error={weatherError} />}
+          {(activeTab === 'map' || activeTab === '3d') && (
+            <RealTimeData data={weather} selectedCity={selectedCity} error={weatherError} />
+          )}
         </div>
       </div>
     </div>
