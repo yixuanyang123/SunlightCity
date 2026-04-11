@@ -11,6 +11,7 @@ export default function Header() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const accountBtnRef = useRef<HTMLButtonElement | null>(null)
+  const accountMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('sc_token')
@@ -22,6 +23,19 @@ export default function Header() {
         .catch(() => localStorage.removeItem('sc_token'))
     }
   }, [])
+
+  useEffect(() => {
+    if (!accountOpen) return
+    const closeIfOutside = (e: PointerEvent) => {
+      const root = accountMenuRef.current
+      if (!root?.contains(e.target as Node)) {
+        setAccountOpen(false)
+      }
+    }
+    // capture: map libs often stopPropagation on bubble; still close when tapping the map
+    document.addEventListener('pointerdown', closeIfOutside, true)
+    return () => document.removeEventListener('pointerdown', closeIfOutside, true)
+  }, [accountOpen])
 
   const onLogin = (token: string, email: string) => {
     localStorage.setItem('sc_token', token)
@@ -35,34 +49,36 @@ export default function Header() {
   }
 
   return (
-    <header className="relative z-50 bg-gradient-to-r from-dark via-secondary to-dark border-b border-yellow-500/20 px-6 py-2 shadow-2xl">
+    <header className="relative z-50 bg-gradient-to-r from-dark via-secondary to-dark border-b border-yellow-500/20 px-4 py-2 md:px-6 shadow-2xl">
       <AccountModal open={modalOpen} onClose={() => setModalOpen(false)} onLogin={onLogin} />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} email={userEmail ?? ''} onLogout={handleSignOut} />
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1 bg-transparent rounded-lg overflow-hidden">
-            <img src="/logo.png" alt="AEXUS" className="w-16 h-16 object-cover" />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex-shrink-0 p-0.5 md:p-1 rounded-lg overflow-hidden">
+            <img src="/logo.png" alt="AEXUS" className="w-10 h-10 md:w-16 md:h-16 object-cover" />
           </div>
-          <div>
-            <h1 className="text-[1.6rem] font-bold bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent">
+          <div className="flex min-w-0 flex-col gap-1 md:gap-1.5">
+            <h1 className="text-lg md:text-[1.6rem] font-bold leading-tight bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent truncate">
               Sunlight City
             </h1>
-            <p className="text-sm text-gray-300 font-medium">Urban Comfort Analysis Platform · By AEXUS</p>
+            <p className="text-xs md:text-sm text-gray-300 font-medium leading-snug truncate hidden sm:block">
+              Urban Comfort Analysis Platform · By AEXUS
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
           {/* Account menu */}
-          <div className="relative">
+          <div ref={accountMenuRef} className="relative">
             {/* anchor ref used by portal to position dropdown */}
             <button
               ref={accountBtnRef}
               onClick={() => setAccountOpen((v) => !v)}
-              className="relative z-60 flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg border border-gray-700"
+              className="relative z-60 flex items-center gap-1.5 md:gap-2 bg-gray-800 px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg border border-gray-700"
             >
-              <User className="w-4 h-4 text-gray-300" />
-              <span className="text-sm text-gray-200">{userEmail ?? 'Account'}</span>
-              <ChevronDown className="w-3 h-3 text-gray-400" />
+              <User className="w-4 h-4 text-gray-300 flex-shrink-0" />
+              <span className="text-xs md:text-sm text-gray-200 truncate max-w-[80px] md:max-w-none">{userEmail ?? 'Account'}</span>
+              <ChevronDown className="w-3 h-3 text-gray-400 flex-shrink-0" />
             </button>
 
             {/* Dropdown menu - render unconditionally but hide with fixed positioning + opacity */}

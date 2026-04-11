@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { MapPin, Navigation, Search, X, ChevronUp, ChevronDown, Clock} from 'lucide-react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { MapPin, Navigation, Search, X, ChevronUp, ChevronDown, ChevronLeft, Clock} from 'lucide-react'
 import { mockRoutePlan } from '@/lib/mockData'
 import { Location, Route } from '@/lib/types'
 import dynamic from 'next/dynamic'
@@ -23,6 +23,13 @@ interface MapViewProps {
     uvIndex: number
   }
   onRouteRequest?: (start: Location, end: Location) => void
+  /** Mobile accordion: when one panel opens, the other closes. Only set when isMobile. */
+  mobileOpenPanel?: 'route' | 'env' | null
+  onMobilePanelChange?: (panel: 'route' | 'env' | null) => void
+}
+
+export type MapViewHandle = {
+  openMobileRouteSheet: () => void
 }
 
 const CITY_DATA: Record<
@@ -64,13 +71,18 @@ const getDistanceKm = (start: Location, end: Location) => {
   return R * c
 }
 
-export default function MapView({
-  onLocationSelect,
-  selectedCity = 'New York',
-  setSelectedCity,
-  weather,
-  onRouteRequest,
-}: MapViewProps) {
+const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
+  {
+    onLocationSelect,
+    selectedCity = 'New York',
+    setSelectedCity,
+    weather,
+    onRouteRequest,
+    mobileOpenPanel,
+    onMobilePanelChange,
+  },
+  ref
+) {
   const cityInfo = CITY_DATA[selectedCity] || CITY_DATA['New York']
   const mockLocations = cityInfo.locations
   const { minLat, maxLat, minLng, maxLng } = cityInfo.bbox
@@ -93,11 +105,25 @@ export default function MapView({
   
   const [isMounted, setIsMounted] = useState(false)
   const [isPanelVisible, setIsPanelVisible] = useState(true)
-  
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobileRouteSheetOpen, setMobileRouteSheetOpen] = useState(false)
+  /** After Find Optimal Route on mobile: sheet shows only summary until user taps back. */
+  const [mobileRouteResultsView, setMobileRouteResultsView] = useState(false)
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
-  
+
+  // Mobile: detect for layout; default Route Planning collapsed only on first load when mobile
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const update = () => setIsMobile(mq.matches)
+    if (mq.matches) setIsPanelVisible(false)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
   // Start and end point selection
   const [startPoint, setStartPoint] = useState<Location | null>(null)
   const [endPoint, setEndPoint] = useState<Location | null>(null)
@@ -107,15 +133,6 @@ export default function MapView({
   selectionModeRef.current = selectionMode
   const [distanceError, setDistanceError] = useState<string | null>(null)
 
-  // Update cursor on map container without re-rendering LeafletMap (so tiles don't disappear)
-  useEffect(() => {
-    const el = mapContainerRef.current
-    if (!el) return
-    if (selectionMode) el.classList.add('cursor-crosshair')
-    else el.classList.remove('cursor-crosshair')
-  }, [selectionMode])
-
-  // Search functionality
   const [startSearchQuery, setStartSearchQuery] = useState('')
   const [endSearchQuery, setEndSearchQuery] = useState('')
   const [startSearchResults, setStartSearchResults] = useState<Location[]>([])
@@ -131,6 +148,53 @@ export default function MapView({
   const justClosedRef = useRef<'start' | 'end' | null>(null)
   const focusSinkRef = useRef<HTMLDivElement>(null)
   const [searchMetro, setSearchMetro] = useState(false)
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openMobileRouteSheet: () => {
+        setMobileRouteResultsView(false)
+        setMobileRouteSheetOpen(true)
+        onMobilePanelChange?.('route')
+      },
+    }),
+    [onMobilePanelChange]
+  )
+
+  useEffect(() => {
+    if (!isMobile || !onMobilePanelChange) return
+    if (mobileRouteSheetOpen) onMobilePanelChange('route')
+    else if (!selectionMode) onMobilePanelChange(null)
+  }, [isMobile, mobileRouteSheetOpen, selectionMode, onMobilePanelChange])
+
+  useEffect(() => {
+    if (isMobile && mobileOpenPanel === 'env') {
+      setMobileRouteSheetOpen(false)
+      setMobileRouteResultsView(false)
+      setIsPanelVisible(false)
+    }
+  }, [isMobile, mobileOpenPanel])
+
+  // Mobile: when user picks "set on map", close route sheet so map is fully visible
+  useEffect(() => {
+    if (isMobile && selectionMode) {
+      setMobileRouteSheetOpen(false)
+      setMobileRouteResultsView(false)
+      setIsPanelVisible(false)
+    }
+  }, [isMobile, selectionMode])
+
+  useEffect(() => {
+    if (!routeSummary) setMobileRouteResultsView(false)
+  }, [routeSummary])
+
+  // Update cursor on map container without re-rendering LeafletMap (so tiles don't disappear)
+  useEffect(() => {
+    const el = mapContainerRef.current
+    if (!el) return
+    if (selectionMode) el.classList.add('cursor-crosshair')
+    else el.classList.remove('cursor-crosshair')
+  }, [selectionMode])
 
   // Clear search results when entering selection mode
   useEffect(() => {
@@ -461,6 +525,7 @@ export default function MapView({
           sunExposure: defaultRoute.sunExposure,
           color: defaultRoute.color,
         })
+        if (isMobile) setMobileRouteResultsView(true)
         return
       }
     } catch (_) {
@@ -479,6 +544,7 @@ export default function MapView({
       sunExposure: defaultRoute.sunExposure,
       color: defaultRoute.color,
     })
+    if (isMobile) setMobileRouteResultsView(true)
   }
 
   const getDefaultSpeed = () => {
@@ -612,52 +678,127 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
   const mapCenter: [number, number] = [centerLat, centerLng]
   const mapZoom = 12
 
-  return (
-    <div className="relative w-full h-full bg-gradient-to-b from-gray-900 to-dark overflow-hidden">
-      {/* Map Background with Grid */}
-      <div className="absolute inset-0">
-        <svg className="w-full h-full opacity-10" viewBox="0 0 1000 1000">
-          <defs>
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="white" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="1000" height="1000" fill="url(#grid)" />
-        </svg>
-      </div>
-
-      {/* Route Selection Panel - Compact Overlay */}
-      <div className="absolute top-4 left-4 z-[5] bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl max-w-md">
-        {/* Header with collapse button */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-700">
-          <div className="flex items-center gap-2">
-            <Navigation className="w-4 h-4 text-yellow-400" />
-            <h3 className="text-yellow-400 font-semibold text-sm">Route Planning</h3>
+  const renderRouteForm = (showCityLayer: boolean, mobileSummaryOnly = false) => {
+    if (mobileSummaryOnly) {
+      if (!routeSummary) {
+        return (
+          <div className="flex items-center justify-center p-8 text-sm text-gray-400">Loading route…</div>
+        )
+      }
+      return (
+        <div className="p-4 pb-6">
+          <div className="rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-3 text-sm text-gray-300">
+            <div className="flex items-center justify-between py-1">
+              <span>Distance</span>
+              <span className="font-mono text-white">{routeSummary.distance} km</span>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <span>Duration</span>
+              <span className="font-mono text-white">{routeSummary.duration} min</span>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <span>Sun Exposure</span>
+              <span className="font-mono text-white">{routeSummary.sunExposure}%</span>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <span>Mode Speed</span>
+              <span className="font-mono text-white">{defaultSpeed} km/h</span>
+            </div>
+            <div className="mt-3 space-y-2 border-t border-gray-700 pt-3">
+              <div className="text-center text-[10px] text-gray-400">Sun Exposure Scale</div>
+              <div
+                className="h-2 w-full rounded-full"
+                style={{
+                  background:
+                    'linear-gradient(to right, hsl(240,100%,50%), hsl(120,100%,50%), hsl(60,100%,50%), hsl(0,100%,50%))',
+                }}
+              />
+              <div className="flex justify-between text-[9px] text-gray-500">
+                <span>&lt; 30% Cool</span>
+                <span>~60%</span>
+                <span>&gt; 85% Hot</span>
+              </div>
+            </div>
           </div>
-          <button
-            onClick={() => setIsPanelVisible(!isPanelVisible)}
-            className="p-1 hover:bg-gray-800 rounded transition-colors"
-            aria-label={isPanelVisible ? "Collapse panel" : "Expand panel"}
-          >
-            {isPanelVisible ? (
-              <ChevronUp className="w-4 h-4 text-gray-400" />
-            ) : (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            )}
-          </button>
         </div>
-        
-        {isPanelVisible && (
-          <div className="p-3 space-y-2">
+      )
+    }
+
+    return (
+          <div
+            className={
+              showCityLayer
+                ? 'flex flex-col gap-4 p-3'
+                : 'flex flex-col gap-3 p-3'
+            }
+          >
             {distanceError && (
               <div className="rounded border border-red-500/50 bg-red-500/10 px-2 py-1.5 text-[11px] text-red-200">
                 {distanceError}
               </div>
             )}
-            {/* Travel Mode Toggle */}
 
+            {/* Mobile: City + Base Map inside sheet so map stays clear when closed */}
+            {showCityLayer && (
+              <div className="order-1 space-y-2 border-b border-gray-700 pb-2">
+                <div>
+                  <label className="block text-[10px] text-gray-400 mb-1">City</label>
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => setSelectedCity && setSelectedCity(e.target.value)}
+                    className="w-full rounded bg-gray-800 border border-gray-600 text-xs text-gray-200 px-2 py-1.5 outline-none"
+                  >
+                    {Object.keys(CITY_DATA).map((c) => (
+                      <option key={c} value={c} className="text-black">
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-400 mb-1">Base Map</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMapLayer('standard')}
+                      className={`px-2 py-1.5 rounded text-[11px] transition-all border ${
+                        mapLayer === 'standard'
+                          ? 'bg-yellow-500 text-gray-900 border-yellow-500'
+                          : 'bg-gray-800 text-gray-300 border-gray-700'
+                      }`}
+                    >
+                      Standard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMapLayer('satellite')}
+                      className={`px-2 py-1.5 rounded text-[11px] transition-all border ${
+                        mapLayer === 'satellite'
+                          ? 'bg-yellow-500 text-gray-900 border-yellow-500'
+                          : 'bg-gray-800 text-gray-300 border-gray-700'
+                      }`}
+                    >
+                      Satellite
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div
+              className={
+                showCityLayer
+                  ? 'order-3 flex flex-col gap-4'
+                  : 'flex flex-col gap-3'
+              }
+            >
+            {/* Travel Mode Toggle */}
             <div>
-              <label className="text-xs text-gray-300 flex items-center gap-2 mb-1">Mode</label>
+              <label
+                className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+              >
+                Mode
+              </label>
               <div className="flex gap-2">
                 <button
                   onClick={() => setTravelMode('walking')}
@@ -687,7 +828,11 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
 
             {/* Light/Shade Mode Toggle */}
             <div>
-              <label className="text-xs text-gray-300 flex items-center gap-2 mb-1">Light preference</label>
+              <label
+                className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+              >
+                Light preference
+              </label>
               <div className="flex gap-2">
                 <button
                   onClick={() => setLightMode('sun')}
@@ -717,7 +862,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
 
           {/* Start Time Selection */}
           <div>
-            <label className="text-xs text-gray-300 flex items-center gap-2 mb-1">
+            <label
+              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+            >
               <Clock className="w-3 h-3" /> Departure Time
             </label>
             <div className="flex items-center gap-2 ">
@@ -742,30 +889,30 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
 
           </div>
 
-          <div className="flex items-center justify-between rounded border border-gray-700 bg-gray-800/70 px-2 py-1.5 text-xs text-gray-300">
-            <span>Search entire metro area</span>
-            <button
-              type="button"
-              onClick={() => setSearchMetro((prev) => !prev)}
-              className={`h-5 w-9 rounded-full border transition-colors ${
-                searchMetro ? 'bg-yellow-500 border-yellow-500' : 'bg-gray-700 border-gray-600'
-              }`}
-              aria-pressed={searchMetro}
-            >
-              <span
-                className={`block h-4 w-4 rounded-full bg-gray-900 transition-transform ${
-                  searchMetro ? 'translate-x-4' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
+        {showCityLayer && startPoint && endPoint && (
+          <button
+            type="button"
+            onClick={handleFindRoute}
+            disabled={routeLoading}
+            className="mt-1 w-full py-2 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 font-semibold rounded text-sm transition-all"
+          >
+            {routeLoading ? 'Loading routes…' : 'Find Optimal Route'}
+          </button>
+        )}
+            </div>
 
-          {/* Focus sink: after selecting from dropdown, focus moves here so the other input doesn't open its list */}
-          <div ref={focusSinkRef} tabIndex={-1} className="w-0 h-0 overflow-hidden opacity-0 pointer-events-none" aria-hidden />
-
+          <div
+            className={
+              showCityLayer
+                ? 'order-2 flex flex-col gap-4'
+                : 'flex flex-col gap-3'
+            }
+          >
           {/* Start Point Selection */}
-          <div>
-            <label className="text-xs text-gray-300 flex items-center gap-2 mb-1">
+          <div className="min-w-0">
+            <label
+              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+            >
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
               Start Point
             </label>
@@ -835,11 +982,15 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             </div>
           </div>
 
+          <div ref={focusSinkRef} tabIndex={-1} className="sr-only" aria-hidden />
+
           {/* End Point Selection */}
-          <div>
-            <label className="text-xs text-gray-300 flex items-center gap-2 mb-1">
+          <div className="min-w-0">
+            <label
+              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+            >
               <div className="w-2 h-2 rounded-full bg-red-500"></div>
-              End Point
+              {showCityLayer ? 'Destination' : 'End Point'}
             </label>
             <div className="relative">
               <div className="flex gap-2">
@@ -855,7 +1006,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                       if (v.trim().length >= MIN_QUERY_LEN) setShowEndResults(true)
                       else setShowEndResults(false)
                     }}
-                    placeholder="Search or click map..."
+                    placeholder={showCityLayer ? 'Where to?' : 'Search or click map...'}
                     className="w-full pl-9 pr-9 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-red-500"
                   />
                   {endPoint && (
@@ -906,14 +1057,14 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
               )}
             </div>
           </div>
+          </div>
 
-        {/* Find Route Button */}
-        {startPoint && endPoint && (
+        {!showCityLayer && startPoint && endPoint && (
           <button
             type="button"
             onClick={handleFindRoute}
             disabled={routeLoading}
-            className="mt-2 w-full py-1.5 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 font-semibold rounded text-xs transition-all"
+            className="w-full py-1.5 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 font-semibold rounded text-xs transition-all"
           >
             {routeLoading ? 'Loading routes…' : 'Find Optimal Route'}
           </button>
@@ -921,7 +1072,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
 
         {/* Route Summary */}
         {routeSummary && (
-          <div className="mt-2 px-2 py-1.5 rounded text-xs border border-gray-700 bg-gray-800/60">
+          <div
+            className={`rounded border border-gray-700 bg-gray-800/60 px-2 py-1.5 text-xs ${showCityLayer ? 'mt-2' : ''}`}
+          >
             <div className="flex items-center justify-between text-gray-300">
               <span>Distance</span>
               <span className="font-mono">{routeSummary.distance} km</span>
@@ -960,15 +1113,121 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
       </div>
     </div>
 
-  </div>
-)}
+          </div>
+        )}
+          </div>
+    )
+  }
 
-        </div>
-      )}
+  return (
+    <div className="relative w-full h-full bg-gradient-to-b from-gray-900 to-dark overflow-hidden">
+      {/* Map Background with Grid */}
+      <div className="absolute inset-0">
+        <svg className="w-full h-full opacity-10" viewBox="0 0 1000 1000">
+          <defs>
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="white" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="1000" height="1000" fill="url(#grid)" />
+        </svg>
       </div>
 
-      {/* City + Layer Selector - Top Right */}
-      <div className="absolute top-4 right-4 z-[5] bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl px-3 py-2 w-48 space-y-2">
+      {/* Mobile: minimal bar when selecting point on map (map stays full visible) */}
+      {isMobile && selectionMode && (
+        <div className="fixed bottom-24 left-3 right-3 z-[10] flex items-center justify-between gap-2 rounded-xl bg-gray-900/95 backdrop-blur-sm border border-yellow-500/40 px-4 py-3 shadow-lg">
+          <span className="text-sm text-yellow-300 font-medium">
+            Tap map to set {selectionMode === 'start' ? 'start' : 'end'} point
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectionMode(null)}
+            className="flex-shrink-0 rounded-lg bg-gray-700 px-3 py-1.5 text-xs font-medium text-gray-200 hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Route Selection Panel — desktop only */}
+      {!isMobile && (
+      <div
+        className="absolute z-[5] top-4 left-4 right-auto bottom-auto max-h-[min(85vh,880px)] max-w-md overflow-y-auto rounded-lg border border-gray-700 bg-gray-900/95 shadow-xl backdrop-blur-sm"
+      >
+        <div className="flex items-center justify-between border-b border-gray-700 bg-gray-900/95 p-3 sticky top-0 z-[6]">
+          <div className="flex items-center gap-2">
+            <Navigation className="w-4 h-4 text-yellow-400" />
+            <h3 className="text-yellow-400 font-semibold text-sm">Route Planning</h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPanelVisible((v) => !v)}
+            className="p-1 hover:bg-gray-800 rounded transition-colors"
+            aria-label={isPanelVisible ? "Collapse panel" : "Expand panel"}
+          >
+            {isPanelVisible ? (
+              <ChevronUp className="w-4 h-4 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
+        </div>
+        {isPanelVisible && renderRouteForm(false)}
+      </div>
+      )}
+
+      {isMobile && mobileRouteSheetOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close directions"
+            className="fixed inset-0 z-[65] bg-black/50 md:hidden"
+            onClick={() => {
+              setMobileRouteSheetOpen(false)
+              setMobileRouteResultsView(false)
+              onMobilePanelChange?.(null)
+            }}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-[70] flex max-h-[92vh] flex-col rounded-t-2xl border border-gray-700 border-b-0 bg-gray-900 shadow-2xl md:hidden pb-[max(8px,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileRouteSheetOpen(false)
+                setMobileRouteResultsView(false)
+                onMobilePanelChange?.(null)
+              }}
+              className="flex w-full shrink-0 flex-col items-center pt-3 pb-1 active:bg-gray-800/50"
+              aria-label="Close directions"
+            >
+              <span className="h-1 w-10 rounded-full bg-gray-500" />
+            </button>
+            <div className="flex shrink-0 items-center border-b border-gray-700 px-4 py-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                {mobileRouteResultsView && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileRouteResultsView(false)}
+                    className="shrink-0 rounded-lg p-2 text-gray-300 hover:bg-gray-800 hover:text-white"
+                    aria-label="Edit route"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                )}
+                <Navigation className="h-5 w-5 shrink-0 text-yellow-400" />
+                <span className="truncate text-base font-semibold text-yellow-400">
+                  {mobileRouteResultsView ? 'Route' : 'Directions'}
+                </span>
+              </div>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {renderRouteForm(true, mobileRouteResultsView)}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* City + Layer Selector - Top Right (desktop only; on mobile moved into route sheet) */}
+      <div className="hidden md:block absolute top-4 right-4 z-[5] bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl px-3 py-2 w-48 space-y-2">
         <div>
           <label className="block text-[10px] text-gray-400 mb-1">City</label>
           <select
@@ -1043,6 +1302,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                 selectedRouteId={selectedRouteId}
                 optimalRouteId={routes[0]?.id ?? null}
                 onRouteSelect={handleRouteSelect}
+                hideZoomControl={isMobile}
               />
             )}
 
@@ -1057,4 +1317,6 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
       </div>
     </div>
   )
-}
+})
+
+export default MapView

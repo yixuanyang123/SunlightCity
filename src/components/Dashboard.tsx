@@ -1,17 +1,32 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
-import MapView from './MapView'
+import BottomNav from './BottomNav'
+import MapView, { type MapViewHandle } from './MapView'
 import ShadeMapView from './ShadeMapView'
 import DataPanel from './DataPanel'
 import RealTimeData from './RealTimeData'
 import { CITY_COORDS } from '@/lib/cityData'
 import type { TabId } from './Sidebar'
 
+export type MobileOpenPanel = 'route' | 'env' | null
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabId>('map')
+  const [mobileOpenPanel, setMobileOpenPanel] = useState<MobileOpenPanel>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const mapViewRef = useRef<MapViewHandle>(null)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number
     lng: number
@@ -81,23 +96,47 @@ export default function Dashboard() {
   }, [selectedCity])
 
   return (
-    <div className="flex flex-col w-full h-screen bg-gradient-to-br from-gray-900 via-secondary to-dark">
+    <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-secondary to-dark md:h-screen">
       {/* Header */}
       <Header />
 
+      {/* Mobile search bar — map tab only */}
+      {activeTab === 'map' && (
+        <div className="md:hidden px-4 pt-2 pb-1 bg-gradient-to-b from-dark via-dark to-gray-900">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('map')
+              mapViewRef.current?.openMobileRouteSheet()
+            }}
+            className="w-full flex items-center gap-2 rounded-full bg-white shadow-lg px-4 py-2.5"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+              <span className="text-sm">🔍</span>
+            </div>
+            <span className="flex-1 text-left text-sm text-gray-500 truncate">
+              Where to?
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {/* Sidebar - desktop only */}
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Map/Content Area */}
-        <div className="flex-1 relative">
+        {/* Map/Content Area - pb for mobile bottom nav */}
+        <div className="flex-1 relative min-h-0 pb-20 md:pb-0">
           {activeTab === 'map' && (
             <MapView
+              ref={mapViewRef}
               onLocationSelect={setSelectedLocation}
               selectedCity={selectedCity}
               setSelectedCity={setSelectedCity}
               weather={weather}
+              mobileOpenPanel={isMobile ? mobileOpenPanel : undefined}
+              onMobilePanelChange={isMobile ? setMobileOpenPanel : undefined}
             />
           )}
           {activeTab === 'shade' && <ShadeMapView />}
@@ -110,7 +149,7 @@ export default function Dashboard() {
             </div>
           )}
           {activeTab === 'analysis' && (
-            <div className="w-full h-full bg-dark p-6 overflow-y-auto">
+            <div className="h-full min-h-0 w-full overflow-y-auto overscroll-y-contain bg-dark p-6">
               <DataPanel
                 location={selectedLocation}
                 selectedCity={selectedCity}
@@ -121,10 +160,19 @@ export default function Dashboard() {
 
           {/* Real-time Data Panel - Only show on map and 3d */}
           {(activeTab === 'map' || activeTab === '3d') && (
-            <RealTimeData data={weather} selectedCity={selectedCity} error={weatherError} />
+            <RealTimeData
+              data={weather}
+              selectedCity={selectedCity}
+              error={weatherError}
+              mobileOpenPanel={isMobile ? mobileOpenPanel : undefined}
+              onMobilePanelChange={isMobile ? setMobileOpenPanel : undefined}
+            />
           )}
         </div>
       </div>
+
+      {/* Bottom nav - mobile only */}
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   )
 }

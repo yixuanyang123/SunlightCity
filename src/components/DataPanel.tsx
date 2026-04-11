@@ -40,10 +40,38 @@ interface DataPanelProps {
   setSelectedCity?: (c: string) => void
 }
 
+/** Shorter plot height on mobile so charts read as wide rectangles, not squares. */
+const CHART_HEIGHT_MOBILE = 200
+const CHART_HEIGHT_DESKTOP = 300
+
 export default function DataPanel({ location, selectedCity = 'New York', setSelectedCity }: DataPanelProps) {
   const [charts, setCharts] = useState<ChartState>(EMPTY_STATE)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [chartHeight, setChartHeight] = useState(CHART_HEIGHT_DESKTOP)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const update = () =>
+      setChartHeight(mq.matches ? CHART_HEIGHT_MOBILE : CHART_HEIGHT_DESKTOP)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  const compactCharts = chartHeight === CHART_HEIGHT_MOBILE
+  const legendStyle = {
+    color: '#D1D5DB',
+    fontSize: compactCharts ? 11 : 12,
+    lineHeight: compactCharts ? '14px' : '18px',
+  } as const
+  const axisTick = { fontSize: compactCharts ? 10 : 12 }
+  const marginDual = compactCharts
+    ? { top: 0, right: 6, left: 0, bottom: 2 }
+    : { top: 8, right: 16, left: 8, bottom: 8 }
+  const marginSingle = compactCharts
+    ? { top: 0, right: 2, left: 0, bottom: 2 }
+    : { top: 8, right: 12, left: 8, bottom: 8 }
 
   useEffect(() => {
     const coords = CITY_COORDS[selectedCity] || CITY_COORDS['New York']
@@ -216,17 +244,31 @@ export default function DataPanel({ location, selectedCity = 'New York', setSele
               </div>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={charts.daily}>
+          <ResponsiveContainer width="100%" height={chartHeight}>
+            <LineChart data={charts.daily} margin={marginDual}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" stroke="#9CA3AF" />
-              <YAxis yAxisId="left" stroke="#9CA3AF" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
-              <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" domain={['dataMin - 2', 'dataMax + 2']} />
+              <XAxis dataKey="time" stroke="#9CA3AF" tick={axisTick} />
+              <YAxis
+                yAxisId="left"
+                stroke="#9CA3AF"
+                domain={[0, 100]}
+                ticks={[0, 25, 50, 75, 100]}
+                tick={axisTick}
+                width={compactCharts ? 28 : 36}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                stroke="#9CA3AF"
+                domain={['dataMin - 2', 'dataMax + 2']}
+                tick={axisTick}
+                width={compactCharts ? 32 : 40}
+              />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
                 labelStyle={{ color: '#F3F4F6' }}
               />
-              <Legend wrapperStyle={{ color: '#D1D5DB' }} />
+              <Legend wrapperStyle={legendStyle} iconSize={compactCharts ? 8 : 10} />
               <Line
                 type="monotone"
                 dataKey="comfort"
@@ -267,16 +309,22 @@ export default function DataPanel({ location, selectedCity = 'New York', setSele
         {/* City-wide Radiance vs Shadow */}
         <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-blue-500/50 transition-all duration-300 shadow-lg">
           <h3 className="text-lg font-semibold text-blue-300 mb-4">City Lighting and Shadow Coverage</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={charts.cityAverages}>
+          <ResponsiveContainer width="100%" height={chartHeight}>
+            <LineChart data={charts.cityAverages} margin={marginSingle}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
+              <XAxis dataKey="time" stroke="#9CA3AF" tick={axisTick} />
+              <YAxis
+                stroke="#9CA3AF"
+                domain={[0, 100]}
+                ticks={[0, 25, 50, 75, 100]}
+                tick={axisTick}
+                width={compactCharts ? 28 : 36}
+              />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
                 labelStyle={{ color: '#F3F4F6' }}
               />
-              <Legend wrapperStyle={{ color: '#D1D5DB' }} />
+              <Legend wrapperStyle={legendStyle} iconSize={compactCharts ? 8 : 10} />
               <Line
                 type="monotone"
                 dataKey="radiance"
@@ -319,16 +367,22 @@ export default function DataPanel({ location, selectedCity = 'New York', setSele
           </div>
           {isLoading && <span className="text-xs text-gray-400">Updating...</span>}
         </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={charts.weekly}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={charts.weekly} margin={marginSingle}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="day" stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
+            <XAxis dataKey="day" stroke="#9CA3AF" tick={axisTick} />
+            <YAxis
+              stroke="#9CA3AF"
+              domain={[0, 100]}
+              ticks={[0, 25, 50, 75, 100]}
+              tick={axisTick}
+              width={compactCharts ? 28 : 36}
+            />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
               labelStyle={{ color: '#F3F4F6' }}
             />
-            <Legend wrapperStyle={{ color: '#D1D5DB' }} />
+            <Legend wrapperStyle={legendStyle} iconSize={compactCharts ? 8 : 10} />
             <Bar dataKey="comfort" fill="#34D399" radius={[8, 8, 0, 0]} />
             <Bar dataKey="cycling" fill="#60A5FA" radius={[8, 8, 0, 0]} />
           </BarChart>

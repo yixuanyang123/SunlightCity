@@ -12,6 +12,9 @@ interface RealTimeDataProps {
   }
   selectedCity?: string
   error?: string | null
+  /** Mobile accordion: when route panel is open, this panel is forced closed. Only set when isMobile. */
+  mobileOpenPanel?: 'route' | 'env' | null
+  onMobilePanelChange?: (panel: 'route' | 'env' | null) => void
 }
 
 // 城市时区映射
@@ -23,9 +26,27 @@ const CITY_TIMEZONES: { [key: string]: string } = {
   'San Diego': 'America/Los_Angeles',
 }
 
-export default function RealTimeData({ data, selectedCity = 'New York', error }: RealTimeDataProps) {
+export default function RealTimeData({ data, selectedCity = 'New York', error, mobileOpenPanel, onMobilePanelChange }: RealTimeDataProps) {
   const [isVisible, setIsVisible] = useState(true)
   const [currentTime, setCurrentTime] = useState('')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const update = () => {
+      const mobile = mq.matches
+      setIsMobile(mobile)
+      if (mobile) setIsVisible(false)
+    }
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  // Mobile accordion: when route panel is open, keep env panel closed
+  useEffect(() => {
+    if (isMobile && mobileOpenPanel === 'route') setIsVisible(false)
+  }, [isMobile, mobileOpenPanel])
 
   useEffect(() => {
     const updateTime = () => {
@@ -51,15 +72,40 @@ export default function RealTimeData({ data, selectedCity = 'New York', error }:
   }, [selectedCity])
 
   return (
-    <div className="absolute bottom-6 right-6 z-[1000] bg-gray-900/95 backdrop-blur-sm border border-yellow-500/30 rounded-lg shadow-2xl w-80">
-      {/* Header with collapse button */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+    <>
+      {/* Mobile: when collapsed show small FAB (matches Route button style) */}
+      {isMobile && !isVisible && (
+        <button
+          type="button"
+          onClick={() => {
+            setIsVisible(true)
+            onMobilePanelChange?.('env')
+          }}
+          className="fixed bottom-24 right-3 z-[1000] flex items-center gap-2 rounded-full bg-gray-900/95 backdrop-blur-sm border border-gray-600 px-3 py-2.5 shadow-lg text-yellow-400"
+          aria-label="Open Environmental Factors"
+        >
+          <Thermometer className="h-4 w-4" />
+          <span className="text-xs font-medium">{data.temperature.toFixed(0)}°C</span>
+        </button>
+      )}
+
+      {(!isMobile || isVisible) && (
+      <div
+        className="absolute bottom-6 right-6 z-[1000] bg-gray-900/95 backdrop-blur-sm border border-yellow-500/30 rounded-lg shadow-2xl w-80
+          max-md:bottom-24 max-md:right-2 max-md:left-2 max-md:w-auto max-md:max-h-[60vh] max-md:overflow-y-auto"
+      >
+        {/* Header with collapse button */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
         <div>
           <h4 className="font-semibold text-yellow-400 text-sm">Real-Time Environmental Factors</h4>
           <p className="text-xs text-gray-400 mt-1">{currentTime}</p>
         </div>
         <button
-          onClick={() => setIsVisible(!isVisible)}
+          onClick={() => {
+            const next = !isVisible
+            setIsVisible(next)
+            if (onMobilePanelChange) onMobilePanelChange(next ? 'env' : null)
+          }}
           className="p-1 hover:bg-gray-800 rounded transition-colors"
           aria-label={isVisible ? "Collapse panel" : "Expand panel"}
         >
@@ -118,6 +164,8 @@ export default function RealTimeData({ data, selectedCity = 'New York', error }:
       </div>
         </>
       )}
-    </div>
+      </div>
+      )}
+    </>
   )
 }

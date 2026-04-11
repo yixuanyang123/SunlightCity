@@ -19,7 +19,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   ]
 
   return (
-    <aside className="w-20 bg-gray-900 border-r border-gray-700 flex flex-col items-center py-6 gap-6">
+    <aside className="hidden md:flex w-20 flex-col items-center py-6 gap-6 bg-gray-900 border-r border-gray-700">
       {tabs.map((tab) => {
         const Icon = tab.icon
         return (

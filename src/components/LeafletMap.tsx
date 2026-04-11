@@ -29,6 +29,8 @@ export interface LeafletMapProps {
   selectedRouteId: string | null
   optimalRouteId: string | null
   onRouteSelect: (routeId: string) => void
+  /** When true, zoom +/- control is hidden (e.g. on mobile). */
+  hideZoomControl?: boolean
 }
 
 export default function LeafletMap({
@@ -47,8 +49,10 @@ export default function LeafletMap({
   selectedRouteId,
   optimalRouteId,
   onRouteSelect,
+  hideZoomControl = false,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const zoomControlRef = useRef<L.Control.Zoom | null>(null)
   const setRef = (el: HTMLDivElement | null) => {
     (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el
     if (containerRefProp) containerRefProp.current = el
@@ -87,9 +91,6 @@ export default function LeafletMap({
     layer.addTo(map)
     layerRef.current = layer
 
-    // Add zoom control
-    L.control.zoom({ position: 'bottomleft' }).addTo(map)
-
     // Sync map size after first layout (container may not have had final size at creation)
     const syncSize = () => {
       if (containerRef.current && containerRef.current.offsetWidth > 0 && containerRef.current.offsetHeight > 0 && mapRef.current) {
@@ -112,6 +113,10 @@ export default function LeafletMap({
 
     // Cleanup on unmount
     return () => {
+      if (zoomControlRef.current && mapRef.current) {
+        mapRef.current.removeControl(zoomControlRef.current)
+        zoomControlRef.current = null
+      }
       ro.disconnect()
       map.remove()
       mapRef.current = null
@@ -119,6 +124,24 @@ export default function LeafletMap({
       markersRef.current.clear()
     }
   }, [])
+
+  // Add/remove zoom control (desktop only; hidden on mobile)
+  useEffect(() => {
+    if (!mapRef.current) return
+    const map = mapRef.current
+    if (hideZoomControl) {
+      if (zoomControlRef.current) {
+        map.removeControl(zoomControlRef.current)
+        zoomControlRef.current = null
+      }
+    } else {
+      if (!zoomControlRef.current) {
+        const zoomControl = L.control.zoom({ position: 'bottomleft' })
+        zoomControl.addTo(map)
+        zoomControlRef.current = zoomControl
+      }
+    }
+  }, [hideZoomControl])
 
   // Handle map click for point selection - read selectionModeRef so this effect never depends on selectionMode (avoids re-run → tiles stay)
   useEffect(() => {
