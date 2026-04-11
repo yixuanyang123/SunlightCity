@@ -96,87 +96,90 @@ export default function Dashboard() {
   }, [selectedCity])
 
   return (
-    <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-secondary to-dark md:h-screen">
-      {/* Header */}
-      <Header />
+    <>
+      {/* Main column: keep overflow-hidden here so Leaflet/map clips inside; do not wrap BottomNav or fixed nav can be clipped on mobile WebKit */}
+      <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-secondary to-dark md:h-screen">
+        {/* Header */}
+        <Header />
 
-      {/* Mobile search bar — map tab only */}
-      {activeTab === 'map' && (
-        <div className="md:hidden px-4 pt-2 pb-1 bg-gradient-to-b from-dark via-dark to-gray-900">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('map')
-              mapViewRef.current?.openMobileRouteSheet()
-            }}
-            className="w-full flex items-center gap-2 rounded-full bg-white shadow-lg px-4 py-2.5"
-          >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-              <span className="text-sm">🔍</span>
-            </div>
-            <span className="flex-1 text-left text-sm text-gray-500 truncate">
-              Where to?
-            </span>
-          </button>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* Sidebar - desktop only */}
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        {/* Map/Content Area — only Analysis scroll needs bottom inset for fixed nav; map/shade/3d fill to bottom (nav overlays) */}
-        <div
-          className={`flex-1 relative min-h-0 ${
-            activeTab === 'analysis' ? 'pb-[5.75rem] md:pb-0' : ''
-          }`}
-        >
-          {activeTab === 'map' && (
-            <MapView
-              ref={mapViewRef}
-              onLocationSelect={setSelectedLocation}
-              selectedCity={selectedCity}
-              setSelectedCity={setSelectedCity}
-              weather={weather}
-              mobileOpenPanel={isMobile ? mobileOpenPanel : undefined}
-              onMobilePanelChange={isMobile ? setMobileOpenPanel : undefined}
-            />
-          )}
-          {activeTab === 'shade' && <ShadeMapView />}
-          {activeTab === '3d' && (
-            <div className="w-full h-full bg-dark flex items-center justify-center">
-              <div className="text-center text-gray-400">
-                <p className="text-2xl font-bold mb-4">3D Urban Model</p>
-                <p className="text-gray-500">Three.js 3D visualization coming soon...</p>
+        {/* Mobile search bar — map tab only */}
+        {activeTab === 'map' && (
+          <div className="md:hidden px-4 pt-2 pb-1 bg-gradient-to-b from-dark via-dark to-gray-900">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('map')
+                mapViewRef.current?.openMobileRouteSheet()
+              }}
+              className="w-full flex items-center gap-2 rounded-full bg-white shadow-lg px-4 py-2.5"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                <span className="text-sm">🔍</span>
               </div>
-            </div>
-          )}
-          {activeTab === 'analysis' && (
-            <div className="h-full min-h-0 w-full overflow-y-auto overscroll-y-contain bg-dark p-6">
-              <DataPanel
-                location={selectedLocation}
+              <span className="flex-1 text-left text-sm text-gray-500 truncate">
+                Where to?
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          {/* Sidebar - desktop only */}
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+          {/* Map/Content Area — only Analysis scroll needs bottom inset for fixed nav; map/shade/3d fill to bottom (nav overlays) */}
+          <div
+            className={`flex-1 relative min-h-0 ${
+              activeTab === 'analysis' ? 'pb-[5.75rem] md:pb-0' : ''
+            }`}
+          >
+            {activeTab === 'map' && (
+              <MapView
+                ref={mapViewRef}
+                onLocationSelect={setSelectedLocation}
                 selectedCity={selectedCity}
                 setSelectedCity={setSelectedCity}
+                weather={weather}
+                mobileOpenPanel={isMobile ? mobileOpenPanel : undefined}
+                onMobilePanelChange={isMobile ? setMobileOpenPanel : undefined}
               />
-            </div>
-          )}
+            )}
+            {activeTab === 'shade' && <ShadeMapView />}
+            {activeTab === '3d' && (
+              <div className="w-full h-full bg-dark flex items-center justify-center">
+                <div className="text-center text-gray-400">
+                  <p className="text-2xl font-bold mb-4">3D Urban Model</p>
+                  <p className="text-gray-500">Three.js 3D visualization coming soon...</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'analysis' && (
+              <div className="h-full min-h-0 w-full overflow-y-auto overscroll-y-contain bg-dark p-6">
+                <DataPanel
+                  location={selectedLocation}
+                  selectedCity={selectedCity}
+                  setSelectedCity={setSelectedCity}
+                />
+              </div>
+            )}
 
-          {/* Real-time Data Panel - Only show on map and 3d */}
-          {(activeTab === 'map' || activeTab === '3d') && (
-            <RealTimeData
-              data={weather}
-              selectedCity={selectedCity}
-              error={weatherError}
-              mobileOpenPanel={isMobile ? mobileOpenPanel : undefined}
-              onMobilePanelChange={isMobile ? setMobileOpenPanel : undefined}
-            />
-          )}
+            {/* Real-time Data Panel - Only show on map and 3d */}
+            {(activeTab === 'map' || activeTab === '3d') && (
+              <RealTimeData
+                data={weather}
+                selectedCity={selectedCity}
+                error={weatherError}
+                mobileOpenPanel={isMobile ? mobileOpenPanel : undefined}
+                onMobilePanelChange={isMobile ? setMobileOpenPanel : undefined}
+              />
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Bottom nav - mobile only */}
+      {/* Bottom nav — sibling of overflow-hidden root so position:fixed is not clipped (Shade Leaflet + WebKit) */}
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
-    </div>
+    </>
   )
 }

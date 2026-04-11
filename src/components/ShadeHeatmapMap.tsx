@@ -53,5 +53,5 @@ export default function ShadeHeatmapMap({ layer, dayOfYear }: ShadeHeatmapMapPro
     if (!mapRef.current) return
   }, [layer, dayOfYear])
 
-  return <div ref={containerRef} className="w-full h-full min-h-[400px]" />
+  return <div ref={containerRef} className="h-full w-full min-h-0 md:min-h-[400px]" />
 }

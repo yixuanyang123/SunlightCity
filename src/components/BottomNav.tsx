@@ -18,7 +18,7 @@ interface BottomNavProps {
 export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden flex-col border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm"
+      className="fixed bottom-0 left-0 right-0 z-[2000] flex md:hidden flex-col border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 6px)' }}
     >
       <nav className="flex items-center justify-around pt-1.5 pb-0.5">
