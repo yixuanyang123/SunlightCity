@@ -1,161 +1,161 @@
 # Sunlight City - Urban Comfort Analysis Platform
 
-Sunlight City 是一个用于评估城市步行与骑行舒适度的前端演示平台。适合用于演示数据可视化、交互地图和实时指标展示。
+Sunlight City is a front-end demo platform for evaluating urban walking and cycling comfort. It is well suited for demonstrating data visualization, interactive maps, and real-time metrics.
 
-## 🌟 功能特性
+## 🌟 Features
 
-### 核心功能
-- **交互式地图** - 可视化城市关键位置和舒适度数据
-- **城市选择 / 账号菜单** - 顶部支持城市切换（默认 Manhattan）与账户菜单
-- **实时数据面板（环境因素）** - 动态显示温度、湿度、风速、紫外线指数等环境因素（不含段级阴影覆盖）
-- **舒适度分析** - 按时间段和月份分析行人和骑行路线的舒适度趋势
-- **3D城市模型** - 支持三维模型展示（可扩展功能）
-- **数据可视化** - 使用Recharts生成高级图表和趋势分析
+### Core features
+- **Interactive map** — Visualize key city locations and comfort data
+- **City selection / account menu** — Top bar supports city switching (Manhattan by default) and an account menu
+- **Real-time data panel (environmental factors)** — Dynamically shows temperature, humidity, wind speed, UV index, and other environmental factors (segment-level shade coverage not included)
+- **Comfort analysis** — Analyze comfort trends for pedestrian and cycling routes by time of day and month
+- **3D city model** — Supports 3D model display (extensible)
+- **Data visualization** — Advanced charts and trend analysis with Recharts
 
-### 研究对象
-- **阴影覆盖分析** - 基于太阳轨迹的阴影动态计算
-- **温度与湿度** - 实时环保数据监测
-- **行人舒适度** - 综合多个因素的舒适度评分
-- **骑行路线** - 针对自行车用户的专项评估
+### Research focus
+- **Shade coverage analysis** — Dynamic shade calculation based on solar trajectory
+- **Temperature and humidity** — Real-time environmental monitoring
+- **Pedestrian comfort** — Composite comfort score from multiple factors
+- **Cycling routes** — Targeted evaluation for bicycle users
 
-## 🛠 技术栈
+## 🛠 Tech stack
 
-- **前端**: Next.js 14 + React 18 (TypeScript)
-- **样式**: Tailwind CSS
-- **图表**: Recharts
-- **图标**: Lucide React
-- **可视化**: Three.js（支持）
-- **地图**: Mapbox GL（集成就绪）
+- **Front end**: Next.js 14 + React 18 (TypeScript)
+- **Styling**: Tailwind CSS
+- **Charts**: Recharts
+- **Icons**: Lucide React
+- **Visualization**: Three.js (supported)
+- **Maps**: Mapbox GL (integration-ready)
 
-**后端（演示）**:
-- **API 框架**: FastAPI (Python)
-- **数据库**: PostgreSQL (asyncpg)
-- **认证**: JWT (python-jose) + pbkdf2_sha256 (passlib)
-- **异步 ORM**: SQLAlchemy 2.0+ (async)
+**Back end (demo)**:
+- **API framework**: FastAPI (Python)
+- **Database**: PostgreSQL (asyncpg)
+- **Auth**: JWT (python-jose) + pbkdf2_sha256 (passlib)
+- **Async ORM**: SQLAlchemy 2.0+ (async)
 
-> 本仓库附带一个轻量后端在 `/server`，用于本地演示用户注册、登录与会话（FastAPI + PostgreSQL）。详细设置和 API 文档见 `server/README.md`。
+> This repo includes a lightweight back end under `/server` for local demos of user registration, login, and sessions (FastAPI + PostgreSQL). See `server/README.md` for setup details and API documentation.
 
-## 📦 安装与运行
+## 📦 Install and run
 
-### 前置要求
+### Prerequisites
 - Node.js 18+
-- npm 或 yarn
+- npm or yarn
 
-### 安装依赖
+### Install dependencies
 ```bash
 npm install
 ```
 
-### 本地完整测试（前端 + 后端）
-需要同时跑后端 API 和前端，登录/注册和 trip 等功能才会可用。
+### Full local test (front end + back end)
+Run both the API and the front end so login/registration, trips, and related features work.
 
-1. **后端**（在项目根目录开一个终端）：
+1. **Back end** (one terminal at the project root):
    ```bash
    server/.venv/bin/python -m uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
    ```
-   首次需先配置 `server/.env`（见 `server/README.md`），并创建虚拟环境：  
-   `python3 -m venv server/.venv` 与 `server/.venv/bin/pip install -r server/requirements.txt`。
+   On first run, configure `server/.env` (see `server/README.md`) and create a virtual environment:  
+   `python3 -m venv server/.venv` and `server/.venv/bin/pip install -r server/requirements.txt`.
 
-2. **前端**（另开一个终端）：
+2. **Front end** (another terminal):
    ```bash
    npm run dev
    ```
 
-3. 浏览器打开 http://localhost:3000，API 在 http://localhost:8000（文档：http://localhost:8000/docs）。
+3. Open http://localhost:3000 in the browser; the API is at http://localhost:8000 (docs: http://localhost:8000/docs).
 
-### 生产构建
+### Production build
 ```bash
 npm run build
 npm start
 ```
 
-### 部署到 Vercel（前端 + 后端一体）
-项目已配置为在 Vercel 上同时运行 Next.js 与 FastAPI（`/api` 下的 Python 函数）。部署后需在 Vercel 项目设置中配置环境变量：
+### Deploy to Vercel (front end + back end together)
+The project is set up to run Next.js and FastAPI (Python functions under `/api`) on Vercel. After deployment, set these environment variables in the Vercel project settings:
 
-**必填：**
-- `DATABASE_URL` — Supabase 连接串，格式：`postgresql+asyncpg://postgres:密码@db.xxx.supabase.co:5432/postgres?ssl=require`
-- `SECRET_KEY` — JWT 签名用密钥（生产环境请用强随机串）
-- `ALLOWED_ORIGINS` — 允许的 CORS 来源，多个用逗号分隔，例如：`https://你的项目.vercel.app,https://sunlight-city-blush.vercel.app`
-- `NEXT_PUBLIC_API_BASE` — 前端请求后端的地址，部署后填：`https://你的项目.vercel.app/api`（与当前站点同域即可）
+**Required:**
+- `DATABASE_URL` — Supabase connection string, format: `postgresql+asyncpg://postgres:PASSWORD@db.xxx.supabase.co:5432/postgres?ssl=require`
+- `SECRET_KEY` — Secret for JWT signing (use a strong random string in production)
+- `ALLOWED_ORIGINS` — Allowed CORS origins, comma-separated, e.g.: `https://your-project.vercel.app,https://sunlight-city-blush.vercel.app`
+- `NEXT_PUBLIC_API_BASE` — Base URL the front end uses for the API; after deployment use `https://your-project.vercel.app/api` (same origin as the site is fine)
 
-配置完成后重新部署，登录/注册会走 Vercel 上的 FastAPI，并连接 Supabase。
+Redeploy after configuration; login/registration will use FastAPI on Vercel and connect to Supabase.
 
-## 📁 项目结构
+## 📁 Project structure
 
 ```
 src/
 ├── app/
-│   ├── layout.tsx          # 根布局
-│   ├── page.tsx            # 主页面
-│   └── globals.css         # 全局样式
+│   ├── layout.tsx          # Root layout
+│   ├── page.tsx            # Main page
+│   └── globals.css         # Global styles
 ├── components/
-│   ├── Dashboard.tsx       # 主仪表板
-│   ├── Header.tsx          # 页面头部
-│   ├── Sidebar.tsx         # 左侧导航栏
-│   ├── MapView.tsx         # 交互式地图
-│   ├── DataPanel.tsx       # 数据分析面板
-│   └── RealTimeData.tsx    # 实时数据显示
-└── lib/                    # 工具函数库
+│   ├── Dashboard.tsx       # Main dashboard
+│   ├── Header.tsx          # Page header
+│   ├── Sidebar.tsx         # Left navigation
+│   ├── MapView.tsx         # Interactive map
+│   ├── DataPanel.tsx       # Data analysis panel
+│   └── RealTimeData.tsx    # Real-time data display
+└── lib/                    # Utilities
 ```
 
-## 🎨 界面特点
+## 🎨 UI characteristics
 
-- **现代深色主题** - 专为长时间使用优化的深色界面
-- **响应式设计** - 支持各种屏幕尺寸
-- **梯度渐变** - 视觉层级清晰的UI设计
-- **实时动画** - 流畅的交互和过渡效果
-- **信息密度优化** - 高效显示复杂数据
+- **Modern dark theme** — Dark UI tuned for long sessions
+- **Responsive layout** — Works across screen sizes
+- **Gradient accents** — Clear visual hierarchy
+- **Real-time motion** — Smooth interactions and transitions
+- **Information density** — Complex data shown efficiently
 
-## 🗺 主要页面
+## 🗺 Main views
 
-### 地图视图
-- 交互式城市地图
-- 位置标记和舒适度指示
-- 快速查看关键地点
+### Map view
+- Interactive city map
+- Location markers and comfort indicators
+- Quick access to key places
 
-### 分析视图
-- 每日舒适度曲线
-- 全年趋势分析
-- 关键指标卡片
-- 位置详细信息
+### Analysis view
+- Daily comfort curves
+- Year-round trend analysis
+- Key metric cards
+- Location details
 
-### 3D模型视图
-- 城市三维建筑模型
-- 阴影投影可视化
-- 多时间段对比
+### 3D model view
+- 3D building models
+- Shadow projection visualization
+- Compare multiple time windows
 
-## 📊 数据指标
+## 📊 Data metrics
 
-- **温度** - 实时温度数据（°C）
-- **湿度** - 相对湿度百分比（%）
-- **风速** - 风速数据（m/s）
-- **紫外线指数** - UV Index（0-11）
-- **舒适度指数** - 综合评分（0-100%）
-- **阴影覆盖** - 日照阴影覆盖率（%）
+- **Temperature** — Real-time temperature (°C)
+- **Humidity** — Relative humidity (%)
+- **Wind speed** — Wind speed (m/s)
+- **UV index** — UV Index (0–11)
+- **Comfort index** — Composite score (0–100%)
+- **Shade coverage** — Sun/shade coverage (%)
 
-## 🚀 扩展计划
+## 🚀 Roadmap
 
-- [ ] 实时天气API集成
-- [ ] Mapbox实际地图集成
-- [ ] Three.js 3D模型实现
-- [ ] 数据库和后端API
-- [ ] 用户认证系统
-- [ ] 数据导出功能
-- [ ] 移动应用支持
+- [ ] Real-time weather API integration
+- [ ] Mapbox map integration
+- [ ] Three.js 3D model implementation
+- [ ] Database and back-end API
+- [ ] User authentication system
+- [ ] Data export
+- [ ] Mobile app support
 
-## 📝 开发指南
+## 📝 Development notes
 
-### 添加新组件
-1. 在 `src/components/` 中创建新的 `.tsx` 文件
-2. 使用 `'use client'` 指令用于客户端组件
-3. 导入并在Dashboard中使用
+### Adding components
+1. Add a new `.tsx` file under `src/components/`
+2. Use the `'use client'` directive for client components
+3. Import and use it from the Dashboard
 
-### 修改样式
-- 编辑 `tailwind.conig.ts` 自定义主题颜色
-- 使用Tailwind CSS类进行样式设置
-- 全局样式在 `src/app/globals.css`
+### Styling
+- Edit `tailwind.config.ts` to customize theme colors
+- Use Tailwind CSS utility classes
+- Global styles live in `src/app/globals.css`
 
-### 集成真实数据
-1. 创建 `src/lib/api.ts` 处理API调用
-2. 使用 `useEffect` 在组件中获取数据
-3. 更新状态管理逻辑
+### Wiring real data
+1. Add `src/lib/api.ts` for API calls
+2. Fetch data in components with `useEffect`
+3. Update state management as needed
