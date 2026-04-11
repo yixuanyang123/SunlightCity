@@ -682,12 +682,12 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
     if (mobileSummaryOnly) {
       if (!routeSummary) {
         return (
-          <div className="flex items-center justify-center p-8 text-sm text-gray-400">Loading route…</div>
+          <div className="flex items-center justify-center p-6 text-sm text-gray-400">Loading route…</div>
         )
       }
       return (
-        <div className="p-4 pb-6">
-          <div className="rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-3 text-sm text-gray-300">
+        <div className="p-3 pb-4">
+          <div className="rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-2.5 text-sm text-gray-300">
             <div className="flex items-center justify-between py-1">
               <span>Distance</span>
               <span className="font-mono text-white">{routeSummary.distance} km</span>
@@ -704,7 +704,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
               <span>Mode Speed</span>
               <span className="font-mono text-white">{defaultSpeed} km/h</span>
             </div>
-            <div className="mt-3 space-y-2 border-t border-gray-700 pt-3">
+            <div className="mt-2 space-y-1.5 border-t border-gray-700 pt-2">
               <div className="text-center text-[10px] text-gray-400">Sun Exposure Scale</div>
               <div
                 className="h-2 w-full rounded-full"
@@ -728,7 +728,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           <div
             className={
               showCityLayer
-                ? 'flex flex-col gap-4 p-3'
+                ? 'flex flex-col gap-2 p-2'
                 : 'flex flex-col gap-3 p-3'
             }
           >
@@ -740,9 +740,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
 
             {/* Mobile: City + Base Map inside sheet so map stays clear when closed */}
             {showCityLayer && (
-              <div className="order-1 space-y-2 border-b border-gray-700 pb-2">
+              <div className="order-1 space-y-1.5 border-b border-gray-700 pb-1.5">
                 <div>
-                  <label className="block text-[10px] text-gray-400 mb-1">City</label>
+                  <label className="block text-[10px] text-gray-400 mb-0.5">City</label>
                   <select
                     value={selectedCity}
                     onChange={(e) => setSelectedCity && setSelectedCity(e.target.value)}
@@ -756,8 +756,8 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-400 mb-1">Base Map</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="block text-[10px] text-gray-400 mb-0.5">Base Map</label>
+                  <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
                       onClick={() => setMapLayer('standard')}
@@ -788,14 +788,14 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             <div
               className={
                 showCityLayer
-                  ? 'order-3 flex flex-col gap-4'
+                  ? 'order-3 flex flex-col gap-2'
                   : 'flex flex-col gap-3'
               }
             >
             {/* Travel Mode Toggle */}
             <div>
               <label
-                className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+                className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
               >
                 Mode
               </label>
@@ -821,7 +821,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                   Cycling
                 </button>
               </div>
-              <div className="mt-1 text-[10px] text-gray-400">
+              <div className={`text-[10px] text-gray-400 ${showCityLayer ? 'mt-0.5' : 'mt-1'}`}>
                 Default speed: {defaultSpeed} km/h (weather-adjusted)
               </div>
             </div>
@@ -829,7 +829,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             {/* Light/Shade Mode Toggle */}
             <div>
               <label
-                className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+                className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
               >
                 Light preference
               </label>
@@ -855,7 +855,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                   Prefer Shade
                 </button>
               </div>
-              <div className="mt-1 text-[10px] text-gray-400">
+              <div className={`text-[10px] text-gray-400 ${showCityLayer ? 'mt-0.5' : 'mt-1'}`}>
                 Default is shade
               </div>
             </div>
@@ -863,7 +863,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           {/* Start Time Selection */}
           <div>
             <label
-              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
             >
               <Clock className="w-3 h-3" /> Departure Time
             </label>
@@ -894,7 +894,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             type="button"
             onClick={handleFindRoute}
             disabled={routeLoading}
-            className="mt-1 w-full py-2 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 font-semibold rounded text-sm transition-all"
+            className="mt-0.5 w-full py-2 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 font-semibold rounded text-sm transition-all"
           >
             {routeLoading ? 'Loading routes…' : 'Find Optimal Route'}
           </button>
@@ -904,14 +904,14 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           <div
             className={
               showCityLayer
-                ? 'order-2 flex flex-col gap-4'
+                ? 'order-2 flex flex-col gap-2'
                 : 'flex flex-col gap-3'
             }
           >
           {/* Start Point Selection */}
           <div className="min-w-0">
             <label
-              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
             >
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
               Start Point
@@ -987,7 +987,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           {/* End Point Selection */}
           <div className="min-w-0">
             <label
-              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-1' : 'mb-1.5'}`}
+              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
             >
               <div className="w-2 h-2 rounded-full bg-red-500"></div>
               {showCityLayer ? 'Destination' : 'End Point'}
@@ -1073,7 +1073,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
         {/* Route Summary */}
         {routeSummary && (
           <div
-            className={`rounded border border-gray-700 bg-gray-800/60 px-2 py-1.5 text-xs ${showCityLayer ? 'mt-2' : ''}`}
+            className={`rounded border border-gray-700 bg-gray-800/60 px-2 py-1.5 text-xs ${showCityLayer ? 'mt-1.5' : ''}`}
           >
             <div className="flex items-center justify-between text-gray-300">
               <span>Distance</span>
@@ -1178,17 +1178,19 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
 
       {isMobile && mobileRouteSheetOpen && (
         <>
+          {/* Above BottomNav (z-2000); dim includes nav so sheet feels modal */}
           <button
             type="button"
             aria-label="Close directions"
-            className="fixed inset-0 z-[65] bg-black/50 md:hidden"
+            className="fixed inset-0 z-[2090] bg-black/50 md:hidden"
             onClick={() => {
               setMobileRouteSheetOpen(false)
               setMobileRouteResultsView(false)
               onMobilePanelChange?.(null)
             }}
           />
-          <div className="fixed bottom-0 left-0 right-0 z-[70] flex max-h-[92vh] flex-col rounded-t-2xl border border-gray-700 border-b-0 bg-gray-900 shadow-2xl md:hidden pb-[max(8px,env(safe-area-inset-bottom))]">
+          {/* Same bottom offset as Dashboard pb-[5.75rem] — panel never overlaps Map/Shade/3D/Analysis + footer */}
+          <div className="fixed bottom-[5.75rem] left-0 right-0 z-[2100] flex max-h-[min(92vh,calc(100dvh-5.75rem-0.5rem))] flex-col rounded-t-2xl border border-gray-700 bg-gray-900 shadow-2xl md:hidden pb-[max(8px,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={() => {
