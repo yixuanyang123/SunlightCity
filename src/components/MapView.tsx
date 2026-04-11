@@ -1272,16 +1272,19 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
       {/* Map Content */}
       <div className="relative w-full h-full flex flex-col min-h-0">
         {/* Map Container - min-h-0 lets flex shrink; min height keeps map visible after layout changes */}
-        <div className="flex-1 relative p-3 min-h-0" style={{ minHeight: 300 }}>
+        <div
+          className="flex-1 relative min-h-0 p-0 md:p-3"
+          style={{ minHeight: 300 }}
+        >
           {/* Hint as sibling of map container so we never add/remove nodes inside map container (prevents map unmount) */}
           {selectionMode && (
             <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] px-4 py-2.5 bg-gray-900 border-2 border-yellow-400 rounded-lg shadow-lg text-yellow-300 text-sm font-semibold whitespace-nowrap pointer-events-none">
               Click anywhere on map to set {selectionMode} point
             </div>
           )}
-          <div 
+          <div
             key="map-container"
-            className="w-full h-full relative rounded-xl border-2 border-yellow-500/30 overflow-hidden"
+            className="w-full h-full relative overflow-hidden rounded-none border-0 md:rounded-xl md:border-2 md:border-yellow-500/30"
             style={{ backgroundColor: '#1a1a1a', minHeight: 280 }}
           >
             {isMounted && (
@@ -1310,8 +1313,8 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           </div>
         </div>
 
-        {/* Controls Bar */}
-        <div className="px-3 py-1.5 bg-gray-900/50 backdrop-blur-sm border-t border-gray-700 flex items-center justify-center">
+        {/* Controls Bar — desktop only; mobile copyright lives under BottomNav */}
+        <div className="hidden md:flex px-3 py-1.5 bg-gray-900/50 backdrop-blur-sm border-t border-gray-700 items-center justify-center">
           <p className="text-gray-400 text-xs">© Cornell University AEXUS</p>
         </div>
       </div>

@@ -126,8 +126,12 @@ export default function Dashboard() {
         {/* Sidebar - desktop only */}
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Map/Content Area - pb for mobile bottom nav */}
-        <div className="flex-1 relative min-h-0 pb-20 md:pb-0">
+        {/* Map/Content Area — only Analysis scroll needs bottom inset for fixed nav; map/shade/3d fill to bottom (nav overlays) */}
+        <div
+          className={`flex-1 relative min-h-0 ${
+            activeTab === 'analysis' ? 'pb-[5.75rem] md:pb-0' : ''
+          }`}
+        >
           {activeTab === 'map' && (
             <MapView
               ref={mapViewRef}
