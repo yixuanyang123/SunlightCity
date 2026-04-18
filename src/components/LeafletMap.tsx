@@ -31,6 +31,18 @@ export interface LeafletMapProps {
   onRouteSelect: (routeId: string) => void
   /** When true, zoom +/- control is hidden (e.g. on mobile). */
   hideZoomControl?: boolean
+  /** Optional polyline + numbered markers for Unity coordinate testing (stable array ref). */
+  unityDebugPath?: { lat: number; lng: number; label: string }[]
+  /** Optional extra markers (not connected to the polyline), e.g. a separate reference lat/lon. */
+  unityDebugExtraPoints?: { lat: number; lng: number; label: string }[]
+  /** Second polyline + markers (e.g. another Unity test route), drawn in a distinct color. */
+  unityDebugSecondaryPath?: { lat: number; lng: number; label: string }[]
+  /** Third polyline + markers (another test route), e.g. Lower East. */
+  unityDebugTertiaryPath?: { lat: number; lng: number; label: string }[]
+  /** Fourth polyline + markers, e.g. Central Park West area. */
+  unityDebugQuaternaryPath?: { lat: number; lng: number; label: string }[]
+  /** Fifth polyline + markers, e.g. East Harlem. */
+  unityDebugQuinaryPath?: { lat: number; lng: number; label: string }[]
 }
 
 export default function LeafletMap({
@@ -50,6 +62,12 @@ export default function LeafletMap({
   optimalRouteId,
   onRouteSelect,
   hideZoomControl = false,
+  unityDebugPath,
+  unityDebugExtraPoints,
+  unityDebugSecondaryPath,
+  unityDebugTertiaryPath,
+  unityDebugQuaternaryPath,
+  unityDebugQuinaryPath,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const zoomControlRef = useRef<L.Control.Zoom | null>(null)
@@ -62,6 +80,7 @@ export default function LeafletMap({
   const markersRef = useRef<Map<string, L.CircleMarker | L.Marker>>(new Map())
   const routeLayersRef = useRef<Map<string, L.Polyline>>(new Map())
   const optimalLabelRef = useRef<L.Marker | null>(null)
+  const unityDebugGroupRef = useRef<L.LayerGroup | null>(null)
 
 
   // Initialize map once
@@ -344,6 +363,184 @@ export default function LeafletMap({
       }
     }
   }, [routes, selectedRouteId, optimalRouteId, onRouteSelect])
+
+  // Unity test path: nodes 1→5 + polyline (same order as table); optional extra ref markers
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    if (unityDebugGroupRef.current) {
+      map.removeLayer(unityDebugGroupRef.current)
+      unityDebugGroupRef.current = null
+    }
+
+    const hasPath = unityDebugPath && unityDebugPath.length > 0
+    const hasSecondary = unityDebugSecondaryPath && unityDebugSecondaryPath.length > 0
+    const hasTertiary = unityDebugTertiaryPath && unityDebugTertiaryPath.length > 0
+    const hasQuaternary = unityDebugQuaternaryPath && unityDebugQuaternaryPath.length > 0
+    const hasQuinary = unityDebugQuinaryPath && unityDebugQuinaryPath.length > 0
+    const extras = unityDebugExtraPoints ?? []
+    if (!hasPath && !hasSecondary && !hasTertiary && !hasQuaternary && !hasQuinary && extras.length === 0)
+      return
+
+    const group = L.layerGroup()
+    const boundsPoints: [number, number][] = []
+
+    if (hasPath && unityDebugPath) {
+      const latLngs = unityDebugPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs)
+
+      const line = L.polyline(latLngs, {
+        color: '#22d3ee',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line)
+
+      unityDebugPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-node-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#0ea5e9;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Unity test · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasSecondary && unityDebugSecondaryPath) {
+      const latLngs2 = unityDebugSecondaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs2)
+
+      const line2 = L.polyline(latLngs2, {
+        color: '#c084fc',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line2)
+
+      unityDebugSecondaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-wv-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#9333ea;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">West Village · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasTertiary && unityDebugTertiaryPath) {
+      const latLngs3 = unityDebugTertiaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs3)
+
+      const line3 = L.polyline(latLngs3, {
+        color: '#34d399',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line3)
+
+      unityDebugTertiaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-le-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#059669;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Lower East · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasQuaternary && unityDebugQuaternaryPath) {
+      const latLngs4 = unityDebugQuaternaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs4)
+
+      const line4 = L.polyline(latLngs4, {
+        color: '#f472b6',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line4)
+
+      unityDebugQuaternaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-cpw-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#db2777;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">CPW · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasQuinary && unityDebugQuinaryPath) {
+      const latLngs5 = unityDebugQuinaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs5)
+
+      const line5 = L.polyline(latLngs5, {
+        color: '#fbbf24',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line5)
+
+      unityDebugQuinaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-eh-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#d97706;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">East Harlem · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    extras.forEach((p) => {
+      boundsPoints.push([p.lat, p.lng])
+      const icon = L.divIcon({
+        className: 'unity-extra-marker',
+        html: `<div style="width:26px;height:26px;border-radius:50%;background:#f59e0b;border:2px solid #fff;color:#111;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+      })
+      const m = L.marker([p.lat, p.lng], { icon })
+      m.bindPopup(
+        `<div style="font-size:12px;font-weight:600;">Ref · ${p.label}</div><div style="font-size:10px;color:#666;margin-top:4px;">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</div>`
+      )
+      group.addLayer(m)
+    })
+
+    group.addTo(map)
+    unityDebugGroupRef.current = group
+
+    if (boundsPoints.length > 0) {
+      const bounds = L.latLngBounds(boundsPoints)
+      map.fitBounds(bounds, { padding: [56, 56], maxZoom: 17 })
+    }
+  }, [
+    unityDebugPath,
+    unityDebugExtraPoints,
+    unityDebugSecondaryPath,
+    unityDebugTertiaryPath,
+    unityDebugQuaternaryPath,
+    unityDebugQuinaryPath,
+  ])
 
   
 

@@ -3,6 +3,14 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { MapPin, Navigation, Search, X, ChevronUp, ChevronDown, ChevronLeft, Clock} from 'lucide-react'
 import { mockRoutePlan } from '@/lib/mockData'
+import {
+  UNITY_CPW_PATH,
+  UNITY_EAST_HARLEM_PATH,
+  UNITY_EXTRA_DEBUG_POINTS,
+  UNITY_LOWER_EAST_PATH,
+  UNITY_TEST_MAP_PATH,
+  UNITY_WEST_VILLAGE_PATH,
+} from '@/lib/unityTestPath'
 import { Location, Route } from '@/lib/types'
 import dynamic from 'next/dynamic'
 
@@ -132,6 +140,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   const mapContainerRef = useRef<HTMLDivElement>(null)
   selectionModeRef.current = selectionMode
   const [distanceError, setDistanceError] = useState<string | null>(null)
+  const [coordInputError, setCoordInputError] = useState<string | null>(null)
 
   const [startSearchQuery, setStartSearchQuery] = useState('')
   const [endSearchQuery, setEndSearchQuery] = useState('')
@@ -214,7 +223,34 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   // Nominatim viewbox: minlon,minlat,maxlon,maxlat. When searchMetro is OFF, restrict to current city.
   const buildViewbox = () => `${minLng},${minLat},${maxLng},${maxLat}`
   const cityCenter = { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 }
-  const isLatLngQuery = (value: string) => /^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/.test(value)
+
+  /** Parse "lat, lng" (WGS84). Example: 40.7484, -73.9844 */
+  type LatLngParseResult =
+    | { ok: true; lat: number; lng: number }
+    | { ok: false; error?: string }
+
+  const parseLatLngString = (raw: string): LatLngParseResult => {
+    const trimmed = raw.trim()
+    if (!trimmed.includes(',')) return { ok: false }
+
+    const m = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/)
+    if (!m) {
+      return {
+        ok: false,
+        error: 'Invalid format. Use latitude, longitude (e.g. 40.7484, -73.9844).',
+      }
+    }
+    const lat = Number(m[1])
+    const lng = Number(m[2])
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return { ok: false, error: 'Could not parse coordinates as numbers.' }
+    }
+    if (lat < -90 || lat > 90) return { ok: false, error: 'Latitude must be between -90 and 90.' }
+    if (lng < -180 || lng > 180) return { ok: false, error: 'Longitude must be between -180 and 180.' }
+    return { ok: true, lat, lng }
+  }
+
+  const isLatLngQuery = (value: string) => parseLatLngString(value).ok
   const MIN_QUERY_LEN = 2
   const SEARCH_DEBOUNCE_MS = 200
 
@@ -451,12 +487,14 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     setStartPoint(null)
     setStartSearchQuery('')
     setDistanceError(null)
+    setCoordInputError(null)
   }
 
   const clearEndPoint = () => {
     setEndPoint(null)
     setEndSearchQuery('')
     setDistanceError(null)
+    setCoordInputError(null)
   }
 
   const handleFindRoute = async () => {
@@ -669,7 +707,42 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
     setDistanceError(null)
     return true
   }
-  
+
+  const applyLatLngFromInput = (which: 'start' | 'end') => {
+    const raw = which === 'start' ? startSearchQuery : endSearchQuery
+    const trimmed = raw.trim()
+    if (!trimmed.includes(',')) {
+      setCoordInputError(null)
+      return
+    }
+    const result = parseLatLngString(trimmed)
+    if (result.ok) {
+      setCoordInputError(null)
+      const loc: Location = {
+        id: `coord-${Date.now()}`,
+        name: `${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}`,
+        lat: result.lat,
+        lng: result.lng,
+      }
+      if (which === 'start') {
+        if (!validateDistance(loc, endPoint)) return
+        setStartPoint(loc)
+        setStartSearchQuery(loc.name)
+        setShowStartResults(false)
+        startInputRef.current?.blur()
+      } else {
+        if (!validateDistance(startPoint, loc)) return
+        setEndPoint(loc)
+        setEndSearchQuery(loc.name)
+        setShowEndResults(false)
+        endInputRef.current?.blur()
+      }
+      return
+    }
+    if (result.error) setCoordInputError(result.error)
+    else setCoordInputError(null)
+  }
+
   const [lightMode, setLightMode] = useState<'sun' | 'shade'>(getLightDefault())
   const defaultSpeed = getDefaultSpeed()
 
@@ -732,9 +805,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                 : 'flex flex-col gap-3 p-3'
             }
           >
-            {distanceError && (
+            {(distanceError || coordInputError) && (
               <div className="rounded border border-red-500/50 bg-red-500/10 px-2 py-1.5 text-[11px] text-red-200">
-                {distanceError}
+                {distanceError || coordInputError}
               </div>
             )}
 
@@ -926,11 +999,19 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                     value={startSearchQuery}
                     onChange={(e) => {
                       const v = e.target.value
+                      setCoordInputError(null)
                       setStartSearchQuery(v)
                       if (v.trim().length >= MIN_QUERY_LEN) setShowStartResults(true)
                       else setShowStartResults(false)
                     }}
-                    placeholder="Search or click map..."
+                    onBlur={() => applyLatLngFromInput('start')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        applyLatLngFromInput('start')
+                      }
+                    }}
+                    placeholder="40.7484, -73.9844 or search…"
                     className="w-full pl-9 pr-9 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-green-500"
                   />
                   {startPoint && (
@@ -1002,11 +1083,21 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                     value={endSearchQuery}
                     onChange={(e) => {
                       const v = e.target.value
+                      setCoordInputError(null)
                       setEndSearchQuery(v)
                       if (v.trim().length >= MIN_QUERY_LEN) setShowEndResults(true)
                       else setShowEndResults(false)
                     }}
-                    placeholder={showCityLayer ? 'Where to?' : 'Search or click map...'}
+                    onBlur={() => applyLatLngFromInput('end')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        applyLatLngFromInput('end')
+                      }
+                    }}
+                    placeholder={
+                      showCityLayer ? '40.7484, -73.9844 or destination…' : '40.7484, -73.9844 or search…'
+                    }
                     className="w-full pl-9 pr-9 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-red-500"
                   />
                   {endPoint && (
@@ -1308,6 +1399,12 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                 optimalRouteId={routes[0]?.id ?? null}
                 onRouteSelect={handleRouteSelect}
                 hideZoomControl={isMobile}
+                unityDebugPath={UNITY_TEST_MAP_PATH}
+                unityDebugSecondaryPath={UNITY_WEST_VILLAGE_PATH}
+                unityDebugTertiaryPath={UNITY_LOWER_EAST_PATH}
+                unityDebugQuaternaryPath={UNITY_CPW_PATH}
+                unityDebugQuinaryPath={UNITY_EAST_HARLEM_PATH}
+                unityDebugExtraPoints={UNITY_EXTRA_DEBUG_POINTS}
               />
             )}
 
