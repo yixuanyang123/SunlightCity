@@ -4,12 +4,26 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { MapPin, Navigation, Search, X, ChevronUp, ChevronDown, ChevronLeft, Clock} from 'lucide-react'
 import { mockRoutePlan } from '@/lib/mockData'
 import {
-  UNITY_CPW_PATH,
-  UNITY_EAST_HARLEM_PATH,
-  UNITY_EXTRA_DEBUG_POINTS,
-  UNITY_LOWER_EAST_PATH,
-  UNITY_TEST_MAP_PATH,
-  UNITY_WEST_VILLAGE_PATH,
+  UNITY_CENTRAL_WEST_PATH,
+  UNITY_CHELSEA_HUDSON_PATH,
+  UNITY_EAST_HARLEM_CENTRAL_PATH,
+  UNITY_EAST_VILLAGE_CONNECTOR_PATH,
+  UNITY_YORKVILLE_ARC_PATH,
+  UNITY_FIDI_PATH,
+  UNITY_GRAMERCY_PATH,
+  UNITY_INWOOD_EAST_PATH,
+  UNITY_HARLEM_RIVER_PATH,
+  UNITY_HUDSON_YARDS_PATH,
+  UNITY_MORNINGSIDE_CORRIDOR_PATH,
+  UNITY_MIDTOWN_CENTRAL_PATH,
+  UNITY_WEST_VILLAGE_EDGE_PATH,
+  UNITY_MORNINGSIDE_EAST_LOOP_PATH,
+  UNITY_MORNINGSIDE_WEST_PATH,
+  UNITY_SOHO_CANAL_PATH,
+  UNITY_TRIBECA_PATH,
+  UNITY_UPPER_EAST_PATH,
+  UNITY_UWS_72_PATH,
+  UNITY_UWS_COLUMBUS_PATH,
 } from '@/lib/unityTestPath'
 import { Location, Route } from '@/lib/types'
 import dynamic from 'next/dynamic'
@@ -1399,12 +1413,26 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                 optimalRouteId={routes[0]?.id ?? null}
                 onRouteSelect={handleRouteSelect}
                 hideZoomControl={isMobile}
-                unityDebugPath={UNITY_TEST_MAP_PATH}
-                unityDebugSecondaryPath={UNITY_WEST_VILLAGE_PATH}
-                unityDebugTertiaryPath={UNITY_LOWER_EAST_PATH}
-                unityDebugQuaternaryPath={UNITY_CPW_PATH}
-                unityDebugQuinaryPath={UNITY_EAST_HARLEM_PATH}
-                unityDebugExtraPoints={UNITY_EXTRA_DEBUG_POINTS}
+                unityDebugPath={UNITY_MORNINGSIDE_CORRIDOR_PATH}
+                unityDebugSecondaryPath={UNITY_TRIBECA_PATH}
+                unityDebugTertiaryPath={UNITY_UPPER_EAST_PATH}
+                unityDebugQuaternaryPath={UNITY_MORNINGSIDE_EAST_LOOP_PATH}
+                unityDebugQuinaryPath={UNITY_MORNINGSIDE_WEST_PATH}
+                unityDebugSenaryPath={UNITY_FIDI_PATH}
+                unityDebugSeptenaryPath={UNITY_CENTRAL_WEST_PATH}
+                unityDebugOctonaryPath={UNITY_UWS_72_PATH}
+                unityDebugNonaryPath={UNITY_UWS_COLUMBUS_PATH}
+                unityDebugDenaryPath={UNITY_HUDSON_YARDS_PATH}
+                unityDebug11Path={UNITY_HARLEM_RIVER_PATH}
+                unityDebug12Path={UNITY_SOHO_CANAL_PATH}
+                unityDebug13Path={UNITY_GRAMERCY_PATH}
+                unityDebug14Path={UNITY_MIDTOWN_CENTRAL_PATH}
+                unityDebug15Path={UNITY_WEST_VILLAGE_EDGE_PATH}
+                unityDebug16Path={UNITY_CHELSEA_HUDSON_PATH}
+                unityDebug17Path={UNITY_INWOOD_EAST_PATH}
+                unityDebug18Path={UNITY_EAST_HARLEM_CENTRAL_PATH}
+                unityDebug19Path={UNITY_YORKVILLE_ARC_PATH}
+                unityDebug20Path={UNITY_EAST_VILLAGE_CONNECTOR_PATH}
               />
             )}
 

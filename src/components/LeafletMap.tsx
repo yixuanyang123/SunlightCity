@@ -43,6 +43,36 @@ export interface LeafletMapProps {
   unityDebugQuaternaryPath?: { lat: number; lng: number; label: string }[]
   /** Fifth polyline + markers, e.g. East Harlem. */
   unityDebugQuinaryPath?: { lat: number; lng: number; label: string }[]
+  /** Sixth polyline + markers, e.g. Morningside Heights. */
+  unityDebugSenaryPath?: { lat: number; lng: number; label: string }[]
+  /** Seventh polyline + markers, e.g. Central Park west. */
+  unityDebugSeptenaryPath?: { lat: number; lng: number; label: string }[]
+  /** Eighth polyline + markers, e.g. UWS ~72nd. */
+  unityDebugOctonaryPath?: { lat: number; lng: number; label: string }[]
+  /** Ninth polyline + markers, e.g. UWS Columbus. */
+  unityDebugNonaryPath?: { lat: number; lng: number; label: string }[]
+  /** Tenth polyline + markers, e.g. Hudson Yards. */
+  unityDebugDenaryPath?: { lat: number; lng: number; label: string }[]
+  /** Eleventh polyline + markers (e.g. Harlem / Washington Heights). */
+  unityDebug11Path?: { lat: number; lng: number; label: string }[]
+  /** Twelfth polyline + markers (e.g. SoHo / Canal). */
+  unityDebug12Path?: { lat: number; lng: number; label: string }[]
+  /** Thirteenth polyline + markers (e.g. Gramercy / Flatiron). */
+  unityDebug13Path?: { lat: number; lng: number; label: string }[]
+  /** Fourteenth polyline + markers (e.g. Midtown). */
+  unityDebug14Path?: { lat: number; lng: number; label: string }[]
+  /** Fifteenth polyline + markers (e.g. Lower Manhattan west edge). */
+  unityDebug15Path?: { lat: number; lng: number; label: string }[]
+  /** Sixteenth polyline + markers (e.g. Chelsea / Hudson). */
+  unityDebug16Path?: { lat: number; lng: number; label: string }[]
+  /** Seventeenth polyline + markers (e.g. Inwood east ridge). */
+  unityDebug17Path?: { lat: number; lng: number; label: string }[]
+  /** Eighteenth polyline + markers (e.g. East Harlem central). */
+  unityDebug18Path?: { lat: number; lng: number; label: string }[]
+  /** Nineteenth polyline + markers (e.g. Yorkville arc). */
+  unityDebug19Path?: { lat: number; lng: number; label: string }[]
+  /** Twentieth polyline + markers (e.g. East Village connector). */
+  unityDebug20Path?: { lat: number; lng: number; label: string }[]
 }
 
 export default function LeafletMap({
@@ -68,6 +98,21 @@ export default function LeafletMap({
   unityDebugTertiaryPath,
   unityDebugQuaternaryPath,
   unityDebugQuinaryPath,
+  unityDebugSenaryPath,
+  unityDebugSeptenaryPath,
+  unityDebugOctonaryPath,
+  unityDebugNonaryPath,
+  unityDebugDenaryPath,
+  unityDebug11Path,
+  unityDebug12Path,
+  unityDebug13Path,
+  unityDebug14Path,
+  unityDebug15Path,
+  unityDebug16Path,
+  unityDebug17Path,
+  unityDebug18Path,
+  unityDebug19Path,
+  unityDebug20Path,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const zoomControlRef = useRef<L.Control.Zoom | null>(null)
@@ -379,8 +424,45 @@ export default function LeafletMap({
     const hasTertiary = unityDebugTertiaryPath && unityDebugTertiaryPath.length > 0
     const hasQuaternary = unityDebugQuaternaryPath && unityDebugQuaternaryPath.length > 0
     const hasQuinary = unityDebugQuinaryPath && unityDebugQuinaryPath.length > 0
+    const hasSenary = unityDebugSenaryPath && unityDebugSenaryPath.length > 0
+    const hasSeptenary = unityDebugSeptenaryPath && unityDebugSeptenaryPath.length > 0
+    const hasOctonary = unityDebugOctonaryPath && unityDebugOctonaryPath.length > 0
+    const hasNonary = unityDebugNonaryPath && unityDebugNonaryPath.length > 0
+    const hasDenary = unityDebugDenaryPath && unityDebugDenaryPath.length > 0
+    const has11 = unityDebug11Path && unityDebug11Path.length > 0
+    const has12 = unityDebug12Path && unityDebug12Path.length > 0
+    const has13 = unityDebug13Path && unityDebug13Path.length > 0
+    const has14 = unityDebug14Path && unityDebug14Path.length > 0
+    const has15 = unityDebug15Path && unityDebug15Path.length > 0
+    const has16 = unityDebug16Path && unityDebug16Path.length > 0
+    const has17 = unityDebug17Path && unityDebug17Path.length > 0
+    const has18 = unityDebug18Path && unityDebug18Path.length > 0
+    const has19 = unityDebug19Path && unityDebug19Path.length > 0
+    const has20 = unityDebug20Path && unityDebug20Path.length > 0
     const extras = unityDebugExtraPoints ?? []
-    if (!hasPath && !hasSecondary && !hasTertiary && !hasQuaternary && !hasQuinary && extras.length === 0)
+    if (
+      !hasPath &&
+      !hasSecondary &&
+      !hasTertiary &&
+      !hasQuaternary &&
+      !hasQuinary &&
+      !hasSenary &&
+      !hasSeptenary &&
+      !hasOctonary &&
+      !hasNonary &&
+      !hasDenary &&
+      !has11 &&
+      !has12 &&
+      !has13 &&
+      !has14 &&
+      !has15 &&
+      !has16 &&
+      !has17 &&
+      !has18 &&
+      !has19 &&
+      !has20 &&
+      extras.length === 0
+    )
       return
 
     const group = L.layerGroup()
@@ -456,7 +538,7 @@ export default function LeafletMap({
           iconAnchor: [12, 12],
         })
         const m = L.marker([p.lat, p.lng], { icon })
-        m.bindPopup(`<div class="text-xs font-semibold">Lower East · Node ${p.label}</div>`)
+        m.bindPopup(`<div class="text-xs font-semibold">UES · Node ${p.label}</div>`)
         group.addLayer(m)
       })
     }
@@ -481,7 +563,7 @@ export default function LeafletMap({
           iconAnchor: [12, 12],
         })
         const m = L.marker([p.lat, p.lng], { icon })
-        m.bindPopup(`<div class="text-xs font-semibold">CPW · Node ${p.label}</div>`)
+        m.bindPopup(`<div class="text-xs font-semibold">MS East · Node ${p.label}</div>`)
         group.addLayer(m)
       })
     }
@@ -506,7 +588,389 @@ export default function LeafletMap({
           iconAnchor: [12, 12],
         })
         const m = L.marker([p.lat, p.lng], { icon })
-        m.bindPopup(`<div class="text-xs font-semibold">East Harlem · Node ${p.label}</div>`)
+        m.bindPopup(`<div class="text-xs font-semibold">MS West · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+
+    if (hasSenary && unityDebugSenaryPath) {
+      const latLngs6 = unityDebugSenaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs6)
+
+      const line6 = L.polyline(latLngs6, {
+        color: '#60a5fa',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line6)
+
+      unityDebugSenaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-ms-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#2563eb;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">FiDi · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasSeptenary && unityDebugSeptenaryPath) {
+      const latLngs7 = unityDebugSeptenaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs7)
+
+      const line7 = L.polyline(latLngs7, {
+        color: '#f87171',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line7)
+
+      unityDebugSeptenaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-cpwest-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#dc2626;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Central · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasOctonary && unityDebugOctonaryPath) {
+      const latLngs8 = unityDebugOctonaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs8)
+
+      const line8 = L.polyline(latLngs8, {
+        color: '#8b5cf6',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line8)
+
+      unityDebugOctonaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-uws72-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#6d28d9;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">UWS 72 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasNonary && unityDebugNonaryPath) {
+      const latLngs9 = unityDebugNonaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs9)
+
+      const line9 = L.polyline(latLngs9, {
+        color: '#2dd4bf',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line9)
+
+      unityDebugNonaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-uws-col-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#0d9488;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 9 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (hasDenary && unityDebugDenaryPath) {
+      const latLngs10 = unityDebugDenaryPath.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs10)
+
+      const line10 = L.polyline(latLngs10, {
+        color: '#fb7185',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line10)
+
+      unityDebugDenaryPath.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-hy-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#e11d48;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 10 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (has11 && unityDebug11Path) {
+      const latLngs11 = unityDebug11Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs11)
+
+      const line11 = L.polyline(latLngs11, {
+        color: '#ca8a04',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line11)
+
+      unityDebug11Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path11-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#a16207;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 11 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (has12 && unityDebug12Path) {
+      const latLngs12 = unityDebug12Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs12)
+
+      const line12 = L.polyline(latLngs12, {
+        color: '#4f46e5',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line12)
+
+      unityDebug12Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path12-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#312e81;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 12 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (has13 && unityDebug13Path) {
+      const latLngs13 = unityDebug13Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs13)
+
+      const line13 = L.polyline(latLngs13, {
+        color: '#ea580c',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line13)
+
+      unityDebug13Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path13-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#9a3412;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 13 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+    if (has14 && unityDebug14Path) {
+      const latLngs14 = unityDebug14Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs14)
+
+      const line14 = L.polyline(latLngs14, {
+        color: '#64748b',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line14)
+
+      unityDebug14Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path14-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#334155;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 14 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+
+    if (has15 && unityDebug15Path) {
+      const latLngs15 = unityDebug15Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs15)
+
+      const line15 = L.polyline(latLngs15, {
+        color: '#0891b2',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line15)
+
+      unityDebug15Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path15-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#0e7490;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 15 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+
+    if (has16 && unityDebug16Path) {
+      const latLngs16 = unityDebug16Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs16)
+
+      const line16 = L.polyline(latLngs16, {
+        color: '#65a30d',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line16)
+
+      unityDebug16Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path16-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#4d7c0f;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 16 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+
+    if (has17 && unityDebug17Path) {
+      const latLngs17 = unityDebug17Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs17)
+
+      const line17 = L.polyline(latLngs17, {
+        color: '#10b981',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line17)
+
+      unityDebug17Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path17-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#047857;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 17 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+
+    if (has18 && unityDebug18Path) {
+      const latLngs18 = unityDebug18Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs18)
+
+      const line18 = L.polyline(latLngs18, {
+        color: '#0ea5e9',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line18)
+
+      unityDebug18Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path18-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#0369a1;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 18 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+
+    if (has19 && unityDebug19Path) {
+      const latLngs19 = unityDebug19Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs19)
+
+      const line19 = L.polyline(latLngs19, {
+        color: '#be185d',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line19)
+
+      unityDebug19Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path19-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#831843;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 19 · Node ${p.label}</div>`)
+        group.addLayer(m)
+      })
+    }
+
+
+    if (has20 && unityDebug20Path) {
+      const latLngs20 = unityDebug20Path.map((p) => [p.lat, p.lng] as [number, number])
+      boundsPoints.push(...latLngs20)
+
+      const line20 = L.polyline(latLngs20, {
+        color: '#3b82f6',
+        weight: 5,
+        opacity: 0.92,
+        lineJoin: 'round',
+      })
+      group.addLayer(line20)
+
+      unityDebug20Path.forEach((p) => {
+        const icon = L.divIcon({
+          className: 'unity-path20-marker',
+          html: `<div style="width:24px;height:24px;border-radius:50%;background:#1d4ed8;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const m = L.marker([p.lat, p.lng], { icon })
+        m.bindPopup(`<div class="text-xs font-semibold">Path 20 · Node ${p.label}</div>`)
         group.addLayer(m)
       })
     }
@@ -540,6 +1004,21 @@ export default function LeafletMap({
     unityDebugTertiaryPath,
     unityDebugQuaternaryPath,
     unityDebugQuinaryPath,
+    unityDebugSenaryPath,
+    unityDebugSeptenaryPath,
+    unityDebugOctonaryPath,
+    unityDebugNonaryPath,
+    unityDebugDenaryPath,
+    unityDebug11Path,
+    unityDebug12Path,
+    unityDebug13Path,
+    unityDebug14Path,
+    unityDebug15Path,
+    unityDebug16Path,
+    unityDebug17Path,
+    unityDebug18Path,
+    unityDebug19Path,
+    unityDebug20Path,
   ])
 
   
