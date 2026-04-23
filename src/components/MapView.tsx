@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { MapPin, Navigation, Search, X, ChevronUp, ChevronDown, ChevronLeft, Clock} from 'lucide-react'
 import { mockRoutePlan } from '@/lib/mockData'
 import { Location, Route } from '@/lib/types'
@@ -26,6 +26,8 @@ interface MapViewProps {
   /** Mobile accordion: when one panel opens, the other closes. Only set when isMobile. */
   mobileOpenPanel?: 'route' | 'env' | null
   onMobilePanelChange?: (panel: 'route' | 'env' | null) => void
+  /** Mobile: notify parent when route fetch is in progress (e.g. chip under top “Choose your route” bar). */
+  onMobileRouteLoadingChange?: (loading: boolean) => void
 }
 
 export type MapViewHandle = {
@@ -80,6 +82,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     onRouteRequest,
     mobileOpenPanel,
     onMobilePanelChange,
+    onMobileRouteLoadingChange,
   },
   ref
 ) {
@@ -109,6 +112,10 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   const [mobileRouteSheetOpen, setMobileRouteSheetOpen] = useState(false)
   /** After Find Optimal Route on mobile: sheet shows only summary until user taps back. */
   const [mobileRouteResultsView, setMobileRouteResultsView] = useState(false)
+  /** Wait until basemap tiles have loaded before showing the mobile route summary panel. */
+  const [basemapTilesReady, setBasemapTilesReady] = useState(false)
+  /** Route response is ready; summary UI opens only after `basemapTilesReady` is true. */
+  const [pendingMobileRouteSummary, setPendingMobileRouteSummary] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
@@ -147,6 +154,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   const endInputRef = useRef<HTMLInputElement>(null)
   const justClosedRef = useRef<'start' | 'end' | null>(null)
   const focusSinkRef = useRef<HTMLDivElement>(null)
+  const handleFindRouteRef = useRef<() => Promise<void>>(async () => {})
   const [searchMetro, setSearchMetro] = useState(false)
 
   useImperativeHandle(
@@ -154,6 +162,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     () => ({
       openMobileRouteSheet: () => {
         setMobileRouteResultsView(false)
+        setPendingMobileRouteSummary(false)
         setMobileRouteSheetOpen(true)
         onMobilePanelChange?.('route')
       },
@@ -171,6 +180,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     if (isMobile && mobileOpenPanel === 'env') {
       setMobileRouteSheetOpen(false)
       setMobileRouteResultsView(false)
+      setPendingMobileRouteSummary(false)
       setIsPanelVisible(false)
     }
   }, [isMobile, mobileOpenPanel])
@@ -180,13 +190,36 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     if (isMobile && selectionMode) {
       setMobileRouteSheetOpen(false)
       setMobileRouteResultsView(false)
+      setPendingMobileRouteSummary(false)
       setIsPanelVisible(false)
     }
   }, [isMobile, selectionMode])
 
   useEffect(() => {
-    if (!routeSummary) setMobileRouteResultsView(false)
+    if (!routeSummary) {
+      setMobileRouteResultsView(false)
+      setPendingMobileRouteSummary(false)
+    }
   }, [routeSummary])
+
+  const onBasemapTilesReady = useCallback((ready: boolean) => {
+    setBasemapTilesReady(ready)
+  }, [])
+
+  useEffect(() => {
+    if (!pendingMobileRouteSummary || !basemapTilesReady || !routeSummary || !isMobile) return
+    // Show the compact floating panel (top-right) — no longer auto-opens the bottom sheet
+    setPendingMobileRouteSummary(false)
+  }, [pendingMobileRouteSummary, basemapTilesReady, routeSummary, isMobile])
+
+  useEffect(() => {
+    if (!onMobileRouteLoadingChange) return
+    if (!isMobile) {
+      onMobileRouteLoadingChange(false)
+      return
+    }
+    onMobileRouteLoadingChange(routeLoading)
+  }, [isMobile, routeLoading, onMobileRouteLoadingChange])
 
   // Update cursor on map container without re-rendering LeafletMap (so tiles don't disappear)
   useEffect(() => {
@@ -525,7 +558,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
           sunExposure: defaultRoute.sunExposure,
           color: defaultRoute.color,
         })
-        if (isMobile) setMobileRouteResultsView(true)
+        if (isMobile) setPendingMobileRouteSummary(true)
         return
       }
     } catch (_) {
@@ -544,8 +577,10 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       sunExposure: defaultRoute.sunExposure,
       color: defaultRoute.color,
     })
-    if (isMobile) setMobileRouteResultsView(true)
+    if (isMobile) setPendingMobileRouteSummary(true)
   }
+
+  handleFindRouteRef.current = handleFindRoute
 
   const getDefaultSpeed = () => {
     const baseSpeed = travelMode === 'walking' ? 4.3 : 12
@@ -583,19 +618,21 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
     setMinute(currentMinutes)
   }
 
-  const handleRouteSelect = (routeId: string) => {
-  setSelectedRouteId(routeId)
-
-  const selected = routes.find(r => r.id === routeId)
-  if (!selected) return
-
-  setRouteSummary({
-    distance: selected.distance,
-    duration: selected.duration,
-    sunExposure: selected.sunExposure,
-    color: selected.color,
-  })
-  }
+  const handleRouteSelect = useCallback((routeId: string) => {
+    setSelectedRouteId(routeId)
+    setRoutes((prev) => {
+      const selected = prev.find((r) => r.id === routeId)
+      if (selected) {
+        setRouteSummary({
+          distance: selected.distance,
+          duration: selected.duration,
+          sunExposure: selected.sunExposure,
+          color: selected.color,
+        })
+      }
+      return prev
+    })
+  }, [])
 
   // Fetch algorithm optimal route from backend and display on map
   const handleLoadAlgorithmRoute = async () => {
@@ -669,7 +706,14 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
     setDistanceError(null)
     return true
   }
-  
+
+  // Mobile: fetch route automatically when both points are set (desktop still uses the button).
+  useEffect(() => {
+    if (!isMobile || !startPoint || !endPoint) return
+    if (!validateDistance(startPoint, endPoint)) return
+    void handleFindRouteRef.current()
+  }, [isMobile, startPoint?.id, endPoint?.id])
+
   const [lightMode, setLightMode] = useState<'sun' | 'shade'>(getLightDefault())
   const defaultSpeed = getDefaultSpeed()
 
@@ -788,7 +832,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             <div
               className={
                 showCityLayer
-                  ? 'order-3 flex flex-col gap-2'
+                  ? 'order-2 flex flex-col gap-2'
                   : 'flex flex-col gap-3'
               }
             >
@@ -889,29 +933,19 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
 
           </div>
 
-        {showCityLayer && startPoint && endPoint && (
-          <button
-            type="button"
-            onClick={handleFindRoute}
-            disabled={routeLoading}
-            className="mt-0.5 w-full py-2 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 font-semibold rounded text-sm transition-all"
-          >
-            {routeLoading ? 'Loading routes…' : 'Find Optimal Route'}
-          </button>
-        )}
             </div>
 
           <div
             className={
               showCityLayer
-                ? 'order-2 flex flex-col gap-2'
+                ? 'order-3 flex flex-col gap-2'
                 : 'flex flex-col gap-3'
             }
           >
           {/* Start Point Selection */}
           <div className="min-w-0">
             <label
-              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
+              className={`text-sm font-semibold text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
             >
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
               Start Point
@@ -950,7 +984,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  <MapPin className="w-3 h-3" />
+                  <MapPin
+                    className={`h-4 w-4 shrink-0 ${selectionMode === 'start' ? 'text-white' : 'text-green-500'}`}
+                  />
                 </button>
               </div>
               
@@ -987,7 +1023,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           {/* End Point Selection */}
           <div className="min-w-0">
             <label
-              className={`text-xs text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
+              className={`text-sm font-semibold text-gray-300 flex items-center gap-2 ${showCityLayer ? 'mb-0.5' : 'mb-1.5'}`}
             >
               <div className="w-2 h-2 rounded-full bg-red-500"></div>
               {showCityLayer ? 'Destination' : 'End Point'}
@@ -1006,7 +1042,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                       if (v.trim().length >= MIN_QUERY_LEN) setShowEndResults(true)
                       else setShowEndResults(false)
                     }}
-                    placeholder={showCityLayer ? 'Where to?' : 'Search or click map...'}
+                    placeholder={showCityLayer ? 'Search or set on map…' : 'Search or click map...'}
                     className="w-full pl-9 pr-9 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-red-500"
                   />
                   {endPoint && (
@@ -1026,7 +1062,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  <MapPin className="w-3 h-3" />
+                  <MapPin
+                    className={`h-4 w-4 shrink-0 ${selectionMode === 'end' ? 'text-white' : 'text-red-500'}`}
+                  />
                 </button>
               </div>
               
@@ -1070,8 +1108,8 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           </button>
         )}
 
-        {/* Route Summary */}
-        {routeSummary && (
+        {/* Route Summary — desktop only; on mobile shown via the auto-opening Route summary sheet */}
+        {routeSummary && !showCityLayer && (
           <div
             className={`rounded border border-gray-700 bg-gray-800/60 px-2 py-1.5 text-xs ${showCityLayer ? 'mt-1.5' : ''}`}
           >
@@ -1133,9 +1171,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
         </svg>
       </div>
 
-      {/* Mobile: minimal bar when selecting point on map (map stays full visible) */}
+      {/* Mobile: minimal bar when selecting point on map — sits just below the temp chip at top-left */}
       {isMobile && selectionMode && (
-        <div className="fixed bottom-24 left-3 right-3 z-[10] flex items-center justify-between gap-2 rounded-xl bg-gray-900/95 backdrop-blur-sm border border-yellow-500/40 px-4 py-3 shadow-lg">
+        <div className="fixed top-[10.9rem] left-1/2 -translate-x-1/2 z-[10] flex w-[min(92vw,22rem)] items-center justify-between gap-2 rounded-xl bg-gray-900/95 backdrop-blur-sm border border-yellow-500/40 px-3 py-1.5 shadow-lg">
           <span className="text-sm text-yellow-300 font-medium">
             Tap map to set {selectionMode === 'start' ? 'start' : 'end'} point
           </span>
@@ -1186,6 +1224,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             onClick={() => {
               setMobileRouteSheetOpen(false)
               setMobileRouteResultsView(false)
+              setPendingMobileRouteSummary(false)
               onMobilePanelChange?.(null)
             }}
           />
@@ -1196,6 +1235,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
               onClick={() => {
                 setMobileRouteSheetOpen(false)
                 setMobileRouteResultsView(false)
+                setPendingMobileRouteSummary(false)
                 onMobilePanelChange?.(null)
               }}
               className="flex w-full shrink-0 flex-col items-center pt-3 pb-1 active:bg-gray-800/50"
@@ -1205,24 +1245,12 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             </button>
             <div className="flex shrink-0 items-center border-b border-gray-700 px-4 py-3">
               <div className="flex min-w-0 flex-1 items-center gap-2">
-                {mobileRouteResultsView && (
-                  <button
-                    type="button"
-                    onClick={() => setMobileRouteResultsView(false)}
-                    className="shrink-0 rounded-lg p-2 text-gray-300 hover:bg-gray-800 hover:text-white"
-                    aria-label="Edit route"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                )}
                 <Navigation className="h-5 w-5 shrink-0 text-yellow-400" />
-                <span className="truncate text-base font-semibold text-yellow-400">
-                  {mobileRouteResultsView ? 'Route' : 'Directions'}
-                </span>
+                <span className="truncate text-base font-semibold text-yellow-400">Directions</span>
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              {renderRouteForm(true, mobileRouteResultsView)}
+              {renderRouteForm(true, false)}
             </div>
           </div>
         </>
@@ -1271,6 +1299,24 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
         </div>
       </div>
 
+      {/* Mobile: compact route summary panel — top-right corner, always visible after route loads */}
+      {isMobile && routeSummary && (
+        <div className="absolute top-3 right-3 z-[1000] rounded-xl border border-white/10 bg-gray-900/60 backdrop-blur-md px-3 py-2 shadow-lg flex flex-col gap-1 min-w-[7rem]">
+          {/* Route type label */}
+          <div className={`text-[11px] font-bold pb-0.5 border-b border-white/10 ${routeSummary.sunExposure <= 50 ? 'text-green-400' : 'text-red-400'}`}>
+            {routeSummary.sunExposure <= 50 ? 'Max Shade Route' : 'Shortest Route'}
+          </div>
+          <div className="flex items-center justify-between gap-3 text-xs text-gray-300">
+            <span>Duration</span>
+            <span className="font-semibold text-white">{routeSummary.duration} min</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-xs text-gray-300">
+            <span>Sun Exposure</span>
+            <span className="font-semibold text-yellow-400">{routeSummary.sunExposure}%</span>
+          </div>
+        </div>
+      )}
+
       {/* Map Content */}
       <div className="relative w-full h-full flex flex-col min-h-0">
         {/* Map Container - min-h-0 lets flex shrink; min height keeps map visible after layout changes */}
@@ -1278,12 +1324,6 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
           className="flex-1 relative min-h-0 p-0 md:p-3"
           style={{ minHeight: 300 }}
         >
-          {/* Hint as sibling of map container so we never add/remove nodes inside map container (prevents map unmount) */}
-          {selectionMode && (
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] px-4 py-2.5 bg-gray-900 border-2 border-yellow-400 rounded-lg shadow-lg text-yellow-300 text-sm font-semibold whitespace-nowrap pointer-events-none">
-              Click anywhere on map to set {selectionMode} point
-            </div>
-          )}
           <div
             key="map-container"
             className="w-full h-full relative overflow-hidden rounded-none border-0 md:rounded-xl md:border-2 md:border-yellow-500/30"
@@ -1308,6 +1348,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                 optimalRouteId={routes[0]?.id ?? null}
                 onRouteSelect={handleRouteSelect}
                 hideZoomControl={isMobile}
+                onBasemapTilesReady={onBasemapTilesReady}
               />
             )}
 

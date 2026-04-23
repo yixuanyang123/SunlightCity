@@ -40,6 +40,7 @@ export default function Dashboard() {
     uvIndex: 0,
   })
   const [weatherError, setWeatherError] = useState<string | null>(null)
+  const [mobileRouteLoading, setMobileRouteLoading] = useState(false)
 
   useEffect(() => {
     const coords = CITY_COORDS[selectedCity] || CITY_COORDS['New York']
@@ -95,6 +96,10 @@ export default function Dashboard() {
     }
   }, [selectedCity])
 
+  useEffect(() => {
+    if (activeTab !== 'map') setMobileRouteLoading(false)
+  }, [activeTab])
+
   return (
     <>
       {/* Main column: keep overflow-hidden here so Leaflet/map clips inside; do not wrap BottomNav or fixed nav can be clipped on mobile WebKit */}
@@ -104,7 +109,7 @@ export default function Dashboard() {
 
         {/* Mobile search bar — map tab only */}
         {activeTab === 'map' && (
-          <div className="md:hidden px-4 pt-2 pb-1 bg-gradient-to-b from-dark via-dark to-gray-900">
+          <div className="relative z-[15] md:hidden px-4 pt-2 pb-1 bg-gradient-to-b from-dark via-dark to-gray-900">
             <button
               type="button"
               onClick={() => {
@@ -117,9 +122,21 @@ export default function Dashboard() {
                 <span className="text-sm">🔍</span>
               </div>
               <span className="flex-1 text-left text-sm text-gray-500 truncate">
-                Where to?
+                Choose your route
               </span>
             </button>
+            {/* Overlay only: does not consume vertical space or push the map */}
+            {mobileRouteLoading && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="pointer-events-none fixed left-1/2 top-[10.9rem] z-30 max-w-[min(92vw,20rem)] -translate-x-1/2"
+              >
+                <div className="rounded-full border border-yellow-500/60 bg-gray-950/95 px-5 py-2 text-center text-sm font-semibold text-yellow-400 shadow-lg shadow-black/40 backdrop-blur-sm">
+                  Routes are loading
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -143,6 +160,7 @@ export default function Dashboard() {
                 weather={weather}
                 mobileOpenPanel={isMobile ? mobileOpenPanel : undefined}
                 onMobilePanelChange={isMobile ? setMobileOpenPanel : undefined}
+                onMobileRouteLoadingChange={setMobileRouteLoading}
               />
             )}
             {activeTab === 'shade' && <ShadeMapView />}

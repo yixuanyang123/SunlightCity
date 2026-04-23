@@ -81,7 +81,7 @@ export default function RealTimeData({ data, selectedCity = 'New York', error, m
             setIsVisible(true)
             onMobilePanelChange?.('env')
           }}
-          className="fixed bottom-24 right-3 z-[1000] flex items-center gap-2 rounded-full bg-gray-900/95 backdrop-blur-sm border border-gray-600 px-3 py-2.5 shadow-lg text-yellow-400"
+          className="absolute left-3 top-3 z-[1000] flex items-center gap-2 rounded-full bg-gray-900/95 backdrop-blur-sm border border-gray-600 px-3 py-2.5 shadow-lg text-yellow-400"
           aria-label="Open Environmental Factors"
         >
           <Thermometer className="h-4 w-4" />
@@ -92,7 +92,7 @@ export default function RealTimeData({ data, selectedCity = 'New York', error, m
       {(!isMobile || isVisible) && (
       <div
         className="absolute bottom-6 right-6 z-[1000] bg-gray-900/95 backdrop-blur-sm border border-yellow-500/30 rounded-lg shadow-2xl w-80
-          max-md:bottom-24 max-md:right-2 max-md:left-2 max-md:w-auto max-md:max-h-[60vh] max-md:overflow-y-auto"
+          max-md:bottom-auto max-md:top-3 max-md:left-2 max-md:right-2 max-md:w-auto max-md:max-h-[min(60vh,calc(100%-6rem))] max-md:overflow-y-auto"
       >
         {/* Header with collapse button */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">

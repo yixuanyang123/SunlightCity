@@ -22,36 +22,27 @@ export function generateMockRoutes(
   const baseDistance = calculateDistance(origin, destination)
   const baseSpeed = mode === 'walking' ? 5 : 15 // km/h
   
-  // 生成3条不同的路线
+  // Two routes: shortest path (more sun) and shadiest alternative (max shade)
   const routes: Route[] = [
     {
       id: 'route-1',
       points: generateRoutePoints(origin, destination, 'direct'),
       distance: baseDistance,
-      sunExposure: preference === 'sun' ? 85 : 35,
+      sunExposure: 75,
       duration: Math.round((baseDistance / baseSpeed) * 60),
-      color: preference === 'sun' ? '#3B82F6' : '#EF4444', // 蓝色（冷）或红色（热）
+      color: 'hsl(60, 100%, 52%)', // yellow-orange: higher sun exposure
     },
     {
       id: 'route-2',
-      points: generateRoutePoints(origin, destination, 'scenic'),
-      distance: baseDistance * 1.15,
-      sunExposure: preference === 'sun' ? 65 : 55,
-      duration: Math.round((baseDistance * 1.15 / baseSpeed) * 60),
-      color: '#F59E0B', // 黄色（中等）
-    },
-    {
-      id: 'route-3',
       points: generateRoutePoints(origin, destination, 'alternative'),
-      distance: baseDistance * 1.25,
-      sunExposure: preference === 'sun' ? 45 : 75,
-      duration: Math.round((baseDistance * 1.25 / baseSpeed) * 60),
-      color: preference === 'sun' ? '#EF4444' : '#3B82F6',
+      distance: baseDistance * 1.2,
+      sunExposure: 30,
+      duration: Math.round((baseDistance * 1.2 / baseSpeed) * 60),
+      color: 'hsl(168, 100%, 32%)', // blue-green: low sun / max shade
     },
   ]
 
-  // 根据偏好排序（趋光则光照高的在前，趋阴则光照低的在前）
-  return routes.sort((a, b) => 
+  return routes.sort((a, b) =>
     preference === 'sun' ? b.sunExposure - a.sunExposure : a.sunExposure - b.sunExposure
   )
 }

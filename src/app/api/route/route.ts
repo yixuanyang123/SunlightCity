@@ -140,7 +140,7 @@ export async function POST(request: Request) {
       [0.5, -3],
     ]
     for (const [t, scale] of viaOffsets) {
-      if (allRoutes.length >= 3) break
+      if (allRoutes.length >= 2) break
       const r = await addViaRoute(t, scale)
       if (r && isNewRoute(r)) {
         allRoutes.push(r)
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (allRoutes.length < 3) {
+    if (allRoutes.length < 2) {
       const addViaLarger = async (t: number, scale: number): Promise<OSRMRoute | null> => {
         const lat = startLat + (endLat - startLat) * t
         const lng = startLng + (endLng - startLng) * t
@@ -167,19 +167,20 @@ export async function POST(request: Request) {
       }
       const r2 = await addViaLarger(0.5, 1)
       if (r2 && isNewRoute(r2)) allRoutes.push(r2)
-      if (allRoutes.length < 3) {
+      if (allRoutes.length < 2) {
         const r3 = await addViaLarger(0.5, -1)
         if (r3 && isNewRoute(r3)) allRoutes.push(r3)
       }
       allRoutes.sort((a, b) => a.distance - b.distance)
     }
 
-    while (allRoutes.length < 3 && allRoutes.length > 0) {
+    while (allRoutes.length < 2 && allRoutes.length > 0) {
       allRoutes.push(allRoutes[0])
     }
-    allRoutes = allRoutes.slice(0, 3)
+    allRoutes = allRoutes.slice(0, 2)
 
-    const sunExposures = [85, 65, 45]
+    // Route 0 = shortest (more exposed), Route 1 = alternative/shadiest (max shade)
+    const sunExposures = [75, 30]
     const routes: ApiRoute[] = allRoutes.map((r, i) => {
       const coords = r.geometry?.coordinates ?? []
       const points: RoutePoint[] = coords.map(([lng, lat]) => ({ lat, lng }))

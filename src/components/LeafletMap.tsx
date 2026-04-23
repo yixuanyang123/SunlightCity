@@ -31,6 +31,8 @@ export interface LeafletMapProps {
   onRouteSelect: (routeId: string) => void
   /** When true, zoom +/- control is hidden (e.g. on mobile). */
   hideZoomControl?: boolean
+  /** Basemap tiles: `false` when switching layer; `true` when visible tiles finished loading. */
+  onBasemapTilesReady?: (ready: boolean) => void
 }
 
 export default function LeafletMap({
@@ -50,8 +52,11 @@ export default function LeafletMap({
   optimalRouteId,
   onRouteSelect,
   hideZoomControl = false,
+  onBasemapTilesReady,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const onBasemapTilesReadyRef = useRef(onBasemapTilesReady)
+  onBasemapTilesReadyRef.current = onBasemapTilesReady
   const zoomControlRef = useRef<L.Control.Zoom | null>(null)
   const setRef = (el: HTMLDivElement | null) => {
     (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el
@@ -62,6 +67,7 @@ export default function LeafletMap({
   const markersRef = useRef<Map<string, L.CircleMarker | L.Marker>>(new Map())
   const routeLayersRef = useRef<Map<string, L.Polyline>>(new Map())
   const optimalLabelRef = useRef<L.Marker | null>(null)
+  const routeLabelsRef = useRef<L.Marker[]>([])
 
 
   // Initialize map once
@@ -78,18 +84,7 @@ export default function LeafletMap({
     })
     mapRef.current = map
 
-    // Add initial tile layer
-    const tileUrl =
-      mapLayer === 'standard'
-        ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-        : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-
-    const layer = L.tileLayer(tileUrl, { 
-      attribution: '',
-      keepBuffer: 2,
-    })
-    layer.addTo(map)
-    layerRef.current = layer
+    // Tile layer is added only in the mapLayer effect so `load` and readiness stay in one place.
 
     // Sync map size after first layout (container may not have had final size at creation)
     const syncSize = () => {
@@ -167,27 +162,36 @@ export default function LeafletMap({
   //   mapRef.current.setView(mapCenter, mapZoom, { animate: true })
   // }, [mapCenter, mapZoom])
 
-  // Handle tile layer changes
+  // Handle tile layer changes (initial basemap + standard/satellite switches)
   useEffect(() => {
     if (!mapRef.current) return
 
-    // Remove old layer
+    onBasemapTilesReadyRef.current?.(false)
+
     if (layerRef.current) {
       layerRef.current.remove()
     }
 
-    // Add new layer
     const tileUrl =
       mapLayer === 'standard'
         ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
         : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 
-    const newLayer = L.tileLayer(tileUrl, { 
+    const newLayer = L.tileLayer(tileUrl, {
       attribution: '',
       keepBuffer: 2,
     })
     newLayer.addTo(mapRef.current)
     layerRef.current = newLayer
+
+    const handleLoad = () => {
+      onBasemapTilesReadyRef.current?.(true)
+    }
+    newLayer.once('load', handleLoad)
+
+    return () => {
+      newLayer.off('load', handleLoad)
+    }
   }, [mapLayer])
 
   // Update markers
@@ -259,17 +263,11 @@ export default function LeafletMap({
     }
   }, [mockLocations, startPoint, endPoint, selectedLocation])
 
-    //function to determine route color based on sun exposure (blue=cool, red=hot), for multi-route display
+    // Max Shade route = green, Shortest route = red
     function getRouteColor(sunExposure: number): string {
-    const MIN = 30   // cool threshold
-    const MAX = 85   // hot threshold
-
-    const clamped = Math.min(Math.max(sunExposure, MIN), MAX)
-    const ratio = (clamped - MIN) / (MAX - MIN)
-
-    // Blue (240) → Red (0); green is around 120. 100% saturation so routes are vivid.
-    const hue = 240 - ratio * 240
-    const isGreen = hue >= 85 && hue <= 155
+    const isShade = sunExposure <= 50
+    const hue = isShade ? 120 : 0   // green for shade, red for shortest
+    const isGreen = isShade
     const lightness = isGreen ? 32 : 52
 
     return `hsl(${hue}, 100%, ${lightness}%)`
@@ -288,6 +286,8 @@ export default function LeafletMap({
       map.removeLayer(optimalLabelRef.current)
       optimalLabelRef.current = null
     }
+    routeLabelsRef.current.forEach((m) => map.removeLayer(m))
+    routeLabelsRef.current = []
 
     routes.forEach((route) => {
       const latLngs = route.points.map((p) => [p.lat, p.lng] as [number, number])
@@ -304,45 +304,48 @@ export default function LeafletMap({
       routeLayersRef.current.set(route.id, polyline)
     })
 
-    if (optimalRouteId && routes.length > 0) {
-      const optimal = routes.find((r) => r.id === optimalRouteId)
-      const others = routes.filter((r) => r.id !== optimalRouteId)
-      if (optimal && optimal.points.length > 0) {
-        let bestIdx = Math.floor(optimal.points.length / 2)
-        if (others.length > 0) {
-          const dist = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
-            Math.hypot(a.lat - b.lat, a.lng - b.lng)
-          const minDistToOthers = (p: { lat: number; lng: number }) => {
-            let d = Infinity
-            for (const route of others) {
-              for (const q of route.points) {
-                const t = dist(p, q)
-                if (t < d) d = t
-              }
-            }
-            return d
-          }
-          const step = Math.max(1, Math.floor(optimal.points.length / 20))
-          let bestScore = 0
-          for (let i = 0; i < optimal.points.length; i += step) {
-            const score = minDistToOthers(optimal.points[i])
-            if (score > bestScore) {
-              bestScore = score
-              bestIdx = i
-            }
-          }
+    // Label every route. optimalRouteId = first route (preferred per light mode).
+    // With exactly 2 routes: optimal = "Shortest" or "Max Shade" depending on sort;
+    // non-optimal gets the other label.
+    const makeLabel = (text: string, color: string, border: string) =>
+      `<span style="display:inline-block;padding:2px 8px;background:#111;color:${color};font-size:11px;font-weight:700;border-radius:4px;white-space:nowrap;border:1px solid ${border};">${text}</span>`
+
+    const optimalRoute = routes.find((r) => r.id === optimalRouteId)
+    const otherRoutes = routes.filter((r) => r.id !== optimalRouteId)
+
+    // Determine labels: optimal has lowest sunExposure → max shade; else max sun → shortest
+    const optimalLabel = optimalRoute && optimalRoute.sunExposure <= 50
+      ? makeLabel('Max Shade Route', '#4ade80', '#4ade80')   // green: shadiest
+      : makeLabel('Shortest Route', '#f87171', '#f87171')     // red: shortest
+
+    const otherLabel = optimalRoute && optimalRoute.sunExposure <= 50
+      ? makeLabel('Shortest Route', '#f87171', '#f87171')
+      : makeLabel('Max Shade Route', '#4ade80', '#4ade80')
+
+    const addLabelToRoute = (route: (typeof routes)[0], html: string) => {
+      if (!route || route.points.length === 0) return
+      // Pick midpoint farthest from the other route for readability
+      const others = routes.filter((r) => r.id !== route.id)
+      const dist = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
+        Math.hypot(a.lat - b.lat, a.lng - b.lng)
+      let bestIdx = Math.floor(route.points.length / 2)
+      if (others.length > 0) {
+        const step = Math.max(1, Math.floor(route.points.length / 20))
+        let bestScore = 0
+        for (let i = 0; i < route.points.length; i += step) {
+          let minD = Infinity
+          for (const o of others) for (const q of o.points) { const d = dist(route.points[i], q); if (d < minD) minD = d }
+          if (minD > bestScore) { bestScore = minD; bestIdx = i }
         }
-        const [lat, lng] = [optimal.points[bestIdx].lat, optimal.points[bestIdx].lng]
-        const icon = L.divIcon({
-          className: 'optimal-route-label',
-          html: '<span style="display:inline-block;padding:2px 8px;background:#111;color:#fbbf24;font-size:11px;font-weight:700;border-radius:4px;white-space:nowrap;border:1px solid #fbbf24;">Optimal</span>',
-          iconSize: [56, 28],
-          iconAnchor: [28, 14],
-        })
-        const marker = L.marker([lat, lng], { icon }).addTo(map)
-        optimalLabelRef.current = marker
       }
+      const { lat, lng } = route.points[bestIdx]
+      const icon = L.divIcon({ className: '', html, iconSize: [80, 24], iconAnchor: [40, 12] })
+      const marker = L.marker([lat, lng], { icon }).addTo(map)
+      routeLabelsRef.current.push(marker)
     }
+
+    if (optimalRoute) addLabelToRoute(optimalRoute, optimalLabel)
+    otherRoutes.forEach((r) => addLabelToRoute(r, otherLabel))
   }, [routes, selectedRouteId, optimalRouteId, onRouteSelect])
 
   
