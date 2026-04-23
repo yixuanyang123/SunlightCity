@@ -291,17 +291,28 @@ export default function LeafletMap({
 
     routes.forEach((route) => {
       const latLngs = route.points.map((p) => [p.lat, p.lng] as [number, number])
-      const hue = 240 - ((Math.min(Math.max(route.sunExposure, 30), 85) - 30) / 55) * 240
-      const isGreen = hue >= 85 && hue <= 155
       const isSelected = selectedRouteId === route.id
+
+      // Visible polyline
       const polyline = L.polyline(latLngs, {
         color: getRouteColor(route.sunExposure),
-        weight: isSelected ? 7 : isGreen ? 5.5 : 4,
+        weight: isSelected ? 8 : 5,
         opacity: 1,
       })
-      polyline.on('click', () => onRouteSelect(route.id))
       polyline.addTo(map)
       routeLayersRef.current.set(route.id, polyline)
+
+      // Wide transparent hit-area polyline for easy tapping on mobile
+      const hitArea = L.polyline(latLngs, {
+        color: 'transparent',
+        weight: 28,
+        opacity: 0,
+        interactive: true,
+      })
+      hitArea.on('click', () => onRouteSelect(route.id))
+      polyline.on('click', () => onRouteSelect(route.id))
+      hitArea.addTo(map)
+      routeLayersRef.current.set(`${route.id}-hit`, hitArea)
     })
 
     // Label every route. optimalRouteId = first route (preferred per light mode).

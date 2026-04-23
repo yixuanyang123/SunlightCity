@@ -1229,7 +1229,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             }}
           />
           {/* Same bottom offset as Dashboard pb-[5.75rem] — panel never overlaps Map/Shade/3D/Analysis + footer */}
-          <div className="fixed bottom-[5.75rem] left-0 right-0 z-[2100] flex max-h-[min(92vh,calc(100dvh-5.75rem-0.5rem))] flex-col rounded-t-2xl border border-gray-700 bg-gray-900 shadow-2xl md:hidden pb-[max(8px,env(safe-area-inset-bottom))]">
+          <div className="fixed bottom-[4.75rem] left-0 right-0 z-[2100] flex min-h-[50dvh] max-h-[min(92vh,calc(100dvh-4.75rem))] flex-col rounded-t-2xl border border-gray-700 bg-gray-900 shadow-2xl md:hidden pb-[max(8px,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={() => {
