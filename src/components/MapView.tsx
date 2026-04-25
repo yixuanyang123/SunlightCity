@@ -24,6 +24,12 @@ import {
   UNITY_UPPER_EAST_PATH,
   UNITY_UWS_72_PATH,
   UNITY_UWS_COLUMBUS_PATH,
+  UNITY_PATH_21,
+  UNITY_PATH_22,
+  UNITY_PATH_23,
+  UNITY_PATH_24,
+  UNITY_PATH_25,
+  UNITY_PATH_26,
 } from '@/lib/unityTestPath'
 import { Location, Route } from '@/lib/types'
 import dynamic from 'next/dynamic'
@@ -1433,6 +1439,12 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                 unityDebug18Path={UNITY_EAST_HARLEM_CENTRAL_PATH}
                 unityDebug19Path={UNITY_YORKVILLE_ARC_PATH}
                 unityDebug20Path={UNITY_EAST_VILLAGE_CONNECTOR_PATH}
+                unityDebug21Path={UNITY_PATH_21}
+                unityDebug22Path={UNITY_PATH_22}
+                unityDebug23Path={UNITY_PATH_23}
+                unityDebug24Path={UNITY_PATH_24}
+                unityDebug25Path={UNITY_PATH_25}
+                unityDebug26Path={UNITY_PATH_26}
               />
             )}
 

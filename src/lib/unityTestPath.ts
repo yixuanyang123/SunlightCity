@@ -247,3 +247,51 @@ export const UNITY_EAST_VILLAGE_CONNECTOR_PATH: { lat: number; lng: number; labe
   { lat: 40.7333, lng: -73.9812, label: '4' },
   { lat: 40.732, lng: -73.9821, label: '5' },
 ]
+
+export const UNITY_PATH_21: { lat: number; lng: number; label: string }[] = [
+  { lat: 40.8051, lng: -73.9528, label: '1' },
+  { lat: 40.8059, lng: -73.9528, label: '2' },
+  { lat: 40.8064, lng: -73.9540, label: '3' },
+  { lat: 40.8057, lng: -73.9544, label: '4' },
+  { lat: 40.8063, lng: -73.9559, label: '5' },
+]
+
+export const UNITY_PATH_22: { lat: number; lng: number; label: string }[] = [
+  { lat: 40.7773, lng: -73.9522, label: '1' },
+  { lat: 40.7766, lng: -73.9527, label: '2' },
+  { lat: 40.7759, lng: -73.9532, label: '3' },
+  { lat: 40.7769, lng: -73.9554, label: '4' },
+  { lat: 40.7762, lng: -73.9559, label: '5' },
+]
+
+export const UNITY_PATH_23: { lat: number; lng: number; label: string }[] = [
+  { lat: 40.7818, lng: -73.9793, label: '1' },
+  { lat: 40.7812, lng: -73.9798, label: '2' },
+  { lat: 40.7806, lng: -73.9802, label: '3' },
+  { lat: 40.7794, lng: -73.9774, label: '4' },
+  { lat: 40.7787, lng: -73.9779, label: '5' },
+]
+
+export const UNITY_PATH_24: { lat: number; lng: number; label: string }[] = [
+  { lat: 40.7546, lng: -73.9991, label: '1' },
+  { lat: 40.7553, lng: -73.9987, label: '2' },
+  { lat: 40.7559, lng: -73.9982, label: '3' },
+  { lat: 40.7552, lng: -73.9965, label: '4' },
+  { lat: 40.7546, lng: -73.9971, label: '5' },
+]
+
+export const UNITY_PATH_25: { lat: number; lng: number; label: string }[] = [
+  { lat: 40.7284, lng: -73.9997, label: '1' },
+  { lat: 40.7273, lng: -74.0006, label: '2' },
+  { lat: 40.7272, lng: -74.0007, label: '3' },
+  { lat: 40.7269, lng: -74.0000, label: '4' },
+  { lat: 40.7258, lng: -74.0009, label: '5' },
+]
+
+export const UNITY_PATH_26: { lat: number; lng: number; label: string }[] = [
+  { lat: 40.7333, lng: -73.9832, label: '1' },
+  { lat: 40.7326, lng: -73.9814, label: '2' },
+  { lat: 40.7322, lng: -73.9803, label: '3' },
+  { lat: 40.7331, lng: -73.9796, label: '4' },
+  { lat: 40.7334, lng: -73.9797, label: '5' },
+]
