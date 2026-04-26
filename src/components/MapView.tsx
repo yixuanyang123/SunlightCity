@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { MapPin, Navigation, Search, X, ChevronUp, ChevronDown, ChevronLeft, Clock} from 'lucide-react'
 import { mockRoutePlan } from '@/lib/mockData'
+import { UNITY_PATH_27, UNITY_PATH_28, UNITY_PATH_29 } from '@/lib/unityTestPath'
 import { Location, Route } from '@/lib/types'
 import dynamic from 'next/dynamic'
 
@@ -1391,6 +1392,9 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
                 optimalRouteId={routes[0]?.id ?? null}
                 onRouteSelect={handleRouteSelect}
                 hideZoomControl={isMobile}
+                unityDebugPath={UNITY_PATH_27}
+                unityDebugPath2={UNITY_PATH_28}
+                unityDebugPath3={UNITY_PATH_29}
               />
             )}
 

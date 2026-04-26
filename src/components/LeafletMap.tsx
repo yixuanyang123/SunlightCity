@@ -31,6 +31,12 @@ export interface LeafletMapProps {
   onRouteSelect: (routeId: string) => void
   /** When true, zoom +/- control is hidden (e.g. on mobile). */
   hideZoomControl?: boolean
+  /** Debug path for coordinate testing. */
+  unityDebugPath?: { lat: number; lng: number; label: string }[]
+  /** Second debug path for coordinate testing. */
+  unityDebugPath2?: { lat: number; lng: number; label: string }[]
+  /** Third debug path for coordinate testing. */
+  unityDebugPath3?: { lat: number; lng: number; label: string }[]
 }
 
 export default function LeafletMap({
@@ -50,6 +56,9 @@ export default function LeafletMap({
   optimalRouteId,
   onRouteSelect,
   hideZoomControl = false,
+  unityDebugPath,
+  unityDebugPath2,
+  unityDebugPath3,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const zoomControlRef = useRef<L.Control.Zoom | null>(null)
@@ -344,6 +353,96 @@ export default function LeafletMap({
       }
     }
   }, [routes, selectedRouteId, optimalRouteId, onRouteSelect])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !unityDebugPath || unityDebugPath.length === 0) return
+
+    const group = L.layerGroup()
+    const latLngs = unityDebugPath.map((p) => [p.lat, p.lng] as [number, number])
+
+    const line = L.polyline(latLngs, { color: '#a855f7', weight: 5, opacity: 0.92, lineJoin: 'round' })
+    group.addLayer(line)
+
+    unityDebugPath.forEach((p) => {
+      const icon = L.divIcon({
+        className: 'unity-debug-marker',
+        html: `<div style="width:24px;height:24px;border-radius:50%;background:#7e22ce;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      })
+      const m = L.marker([p.lat, p.lng], { icon })
+      m.bindPopup(`<div style="font-size:12px;font-weight:600;">Node ${p.label}</div><div style="font-size:10px;color:#666;">${p.lat}, ${p.lng}</div>`)
+      group.addLayer(m)
+    })
+
+    group.addTo(map)
+    const bounds = L.latLngBounds(latLngs)
+    map.fitBounds(bounds, { padding: [56, 56], maxZoom: 17 })
+
+    return () => { map.removeLayer(group) }
+  }, [unityDebugPath])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !unityDebugPath2 || unityDebugPath2.length === 0) return
+
+    const group = L.layerGroup()
+    const latLngs = unityDebugPath2.map((p) => [p.lat, p.lng] as [number, number])
+
+    const line = L.polyline(latLngs, { color: '#f97316', weight: 5, opacity: 0.92, lineJoin: 'round' })
+    group.addLayer(line)
+
+    unityDebugPath2.forEach((p) => {
+      const icon = L.divIcon({
+        className: 'unity-debug-marker2',
+        html: `<div style="width:24px;height:24px;border-radius:50%;background:#c2410c;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      })
+      const m = L.marker([p.lat, p.lng], { icon })
+      m.bindPopup(`<div style="font-size:12px;font-weight:600;">Node ${p.label}</div><div style="font-size:10px;color:#666;">${p.lat}, ${p.lng}</div>`)
+      group.addLayer(m)
+    })
+
+    group.addTo(map)
+    const bounds = L.latLngBounds(latLngs)
+    map.fitBounds(bounds, { padding: [56, 56], maxZoom: 17 })
+
+    return () => { map.removeLayer(group) }
+  }, [unityDebugPath2])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !unityDebugPath3 || unityDebugPath3.length === 0) return
+
+    const group = L.layerGroup()
+    const latLngs = unityDebugPath3.map((p) => [p.lat, p.lng] as [number, number])
+
+    const line = L.polyline(latLngs, { color: '#06b6d4', weight: 5, opacity: 0.92, lineJoin: 'round' })
+    group.addLayer(line)
+
+    unityDebugPath3.forEach((p) => {
+      const icon = L.divIcon({
+        className: 'unity-debug-marker3',
+        html: `<div style="width:24px;height:24px;border-radius:50%;background:#0e7490;border:2px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.45);">${p.label}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      })
+      const m = L.marker([p.lat, p.lng], { icon })
+      m.bindPopup(`<div style="font-size:12px;font-weight:600;">Node ${p.label}</div><div style="font-size:10px;color:#666;">${p.lat}, ${p.lng}</div>`)
+      group.addLayer(m)
+    })
+
+    group.addTo(map)
+    const bounds = L.latLngBounds(latLngs)
+    map.fitBounds(bounds, { padding: [56, 56], maxZoom: 17 })
+
+    return () => { map.removeLayer(group) }
+  }, [unityDebugPath3])
+
+
+
 
   
 
