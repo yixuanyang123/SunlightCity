@@ -90,6 +90,8 @@ export default function MapView({
   } | null>(null)
 
   const [mapLayer, setMapLayer] = useState<'standard' | 'satellite'>('standard')
+  const [customWalkingSpeed, setCustomWalkingSpeed] = useState<number | null>(null)
+  const [customCyclingSpeed, setCustomCyclingSpeed] = useState<number | null>(null)
   
   const [isMounted, setIsMounted] = useState(false)
   const [isPanelVisible, setIsPanelVisible] = useState(true)
@@ -607,6 +609,19 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
   const [lightMode, setLightMode] = useState<'sun' | 'shade'>(getLightDefault())
   const defaultSpeed = getDefaultSpeed()
 
+  const currentCustomSpeed = travelMode === 'walking' ? customWalkingSpeed : customCyclingSpeed
+  const effectiveSpeed = currentCustomSpeed ?? defaultSpeed
+  const sliderValue = currentCustomSpeed ?? defaultSpeed
+
+  const handleSpeedChange = (val: number) => {
+    if (travelMode === 'walking') setCustomWalkingSpeed(val)
+    else setCustomCyclingSpeed(val)
+  }
+  const handleSpeedReset = () => {
+    if (travelMode === 'walking') setCustomWalkingSpeed(null)
+    else setCustomCyclingSpeed(null)
+  }
+
   const centerLat = (minLat + maxLat) / 2
   const centerLng = (minLng + maxLng) / 2
   const mapCenter: [number, number] = [centerLat, centerLng]
@@ -682,6 +697,35 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
               </div>
               <div className="mt-1 text-[10px] text-gray-400">
                 Default speed: {defaultSpeed} km/h (weather-adjusted)
+              </div>
+              <div className="mt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] text-gray-300">Your speed</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono text-yellow-400">{effectiveSpeed.toFixed(1)} km/h</span>
+                    {currentCustomSpeed !== null && (
+                      <button
+                        onClick={handleSpeedReset}
+                        className="text-[9px] text-gray-500 hover:text-gray-300 underline leading-none"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min={travelMode === 'walking' ? 1 : 5}
+                  max={travelMode === 'walking' ? 10 : 35}
+                  step={travelMode === 'walking' ? 0.1 : 0.5}
+                  value={sliderValue}
+                  onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                  className="w-full h-1 rounded-full appearance-none cursor-pointer accent-yellow-500 bg-gray-700"
+                />
+                <div className="flex justify-between text-[9px] text-gray-600 mt-0.5">
+                  <span>{travelMode === 'walking' ? '1' : '5'} km/h</span>
+                  <span>{travelMode === 'walking' ? '10' : '35'} km/h</span>
+                </div>
               </div>
             </div>
 
@@ -928,7 +972,11 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             </div>
             <div className="flex items-center justify-between text-gray-300">
               <span>Duration</span>
-              <span className="font-mono">{routeSummary.duration} min</span>
+              <span className="font-mono">
+                {currentCustomSpeed !== null
+                  ? Math.round((routeSummary.distance / effectiveSpeed) * 60)
+                  : routeSummary.duration} min
+              </span>
             </div>
             <div className="flex items-center justify-between text-gray-300">
               <span>Sun Exposure</span>
@@ -936,7 +984,7 @@ const getLightDefault = (): 'sun' | 'shade' => 'shade'
             </div>
             <div className="flex items-center justify-between text-gray-300">
               <span>Mode Speed</span>
-              <span className="font-mono">{defaultSpeed} km/h</span>
+              <span className="font-mono">{effectiveSpeed.toFixed(1)} km/h</span>
             </div>
           <div className="pt-2 border-t border-gray-700 space-y-1">
       <div className="text-[10px] text-gray-400 text-center">

@@ -41,7 +41,7 @@ export default function Header() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="p-1 bg-transparent rounded-lg overflow-hidden">
-            <img src="/logo.png" alt="AEXUS" className="w-16 h-16 object-cover" />
+            <img src="/logo.png" alt="AEXUS" className="h-16 w-auto object-contain" />
           </div>
           <div>
             <h1 className="text-[1.6rem] font-bold bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent">
