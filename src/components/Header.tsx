@@ -55,7 +55,7 @@ export default function Header() {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex-shrink-0 p-0.5 md:p-1 rounded-lg overflow-hidden">
-            <img src="/logo.png" alt="AEXUS" className="w-10 h-10 md:w-16 md:h-16 object-cover" />
+            <img src="/logo.png" alt="AEXUS" className="h-10 md:h-16 w-auto object-contain" />
           </div>
           <div className="flex min-w-0 flex-col gap-1 md:gap-1.5">
             <h1 className="text-lg md:text-[1.6rem] font-bold leading-tight bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent truncate">
