@@ -157,6 +157,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
   const justClosedRef = useRef<'start' | 'end' | null>(null)
   const focusSinkRef = useRef<HTMLDivElement>(null)
   const handleFindRouteRef = useRef<() => Promise<void>>(async () => {})
+  const prevStartPointIdRef = useRef<string | null>(null)
   const [searchMetro, setSearchMetro] = useState(false)
 
   useImperativeHandle(
@@ -196,6 +197,20 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       setIsPanelVisible(false)
     }
   }, [isMobile, selectionMode])
+
+  // Mobile: after a start point is set (e.g. map tap), reopen directions sheet automatically.
+  useEffect(() => {
+    if (!isMobile) return
+    const currentStartId = startPoint?.id ?? null
+    const previousStartId = prevStartPointIdRef.current
+    prevStartPointIdRef.current = currentStartId
+    if (!currentStartId || currentStartId === previousStartId) return
+    if (selectionMode) return
+    if (!mobileRouteSheetOpen) {
+      setMobileRouteSheetOpen(true)
+      onMobilePanelChange?.('route')
+    }
+  }, [isMobile, startPoint?.id, selectionMode, mobileRouteSheetOpen, onMobilePanelChange])
 
   useEffect(() => {
     if (!routeSummary) {

@@ -49,23 +49,23 @@ export default function Header() {
   }
 
   return (
-    <header className="relative z-50 bg-gradient-to-r from-dark via-secondary to-dark border-b border-yellow-500/20 px-6 py-1 shadow-2xl">
+    <header className="relative z-50 bg-gradient-to-r from-dark via-secondary to-dark border-b border-yellow-500/20 px-3 py-1 md:px-6 shadow-2xl">
       <AccountModal open={modalOpen} onClose={() => setModalOpen(false)} onLogin={onLogin} />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} email={userEmail ?? ''} onLogout={handleSignOut} />
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 md:gap-1">
           <div className="p-1 bg-transparent rounded-lg overflow-hidden">
-            <img src="/logo.png" alt="AEXUS" className="h-12 w-auto object-contain" />
+            <img src="/logo.png" alt="AEXUS" className="h-9 w-auto object-contain md:h-12" />
           </div>
-          <div className="-ml-1 w-[22rem] leading-none">
+          <div className="w-[12rem] leading-none md:-ml-1 md:w-[22rem]">
             <h1
-              className="w-full text-[1.9rem] text-left font-black uppercase tracking-[0.22em] bg-gradient-to-b from-gray-100 via-gray-300 to-gray-500 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
+              className="w-full text-[1.35rem] text-left font-black uppercase tracking-[0.2em] bg-gradient-to-b from-gray-100 via-gray-300 to-gray-500 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)] md:text-[1.9rem] md:tracking-[0.22em]"
               style={{ fontFamily: 'Arial Black, Inter, sans-serif' }}
             >
               AEXUS
             </h1>
             <p
-              className="mt-0.5 w-full text-left text-[0.72rem] font-extrabold uppercase tracking-[0.27em] bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)]"
+              className="mt-0.5 w-full text-left text-[0.5rem] font-extrabold uppercase tracking-[0.28em] bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)] md:text-[0.72rem] md:tracking-[0.27em]"
               style={{ fontFamily: 'Arial Black, Inter, sans-serif' }}
             >
               SUNLIGHT CITY
