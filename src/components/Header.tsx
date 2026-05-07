@@ -35,19 +35,27 @@ export default function Header() {
   }
 
   return (
-    <header className="relative z-50 bg-gradient-to-r from-dark via-secondary to-dark border-b border-yellow-500/20 px-6 py-2 shadow-2xl">
+    <header className="relative z-50 bg-gradient-to-r from-dark via-secondary to-dark border-b border-yellow-500/20 px-6 py-1 shadow-2xl">
       <AccountModal open={modalOpen} onClose={() => setModalOpen(false)} onLogin={onLogin} />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} email={userEmail ?? ''} onLogout={handleSignOut} />
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1">
           <div className="p-1 bg-transparent rounded-lg overflow-hidden">
-            <img src="/logo.png" alt="AEXUS" className="h-16 w-auto object-contain" />
+            <img src="/logo.png" alt="AEXUS" className="h-12 w-auto object-contain" />
           </div>
-          <div>
-            <h1 className="text-[1.6rem] font-bold bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 bg-clip-text text-transparent">
-              Sunlight City
+          <div className="-ml-1 w-[22rem] leading-none">
+            <h1
+              className="w-full text-[1.9rem] text-left font-black uppercase tracking-[0.22em] bg-gradient-to-b from-gray-100 via-gray-300 to-gray-500 bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
+              style={{ fontFamily: 'Arial Black, Inter, sans-serif' }}
+            >
+              AEXUS
             </h1>
-            <p className="text-sm text-gray-300 font-medium">Urban Comfort Analysis Platform · By AEXUS</p>
+            <p
+              className="mt-0.5 w-full text-left text-[0.72rem] font-extrabold uppercase tracking-[0.27em] bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)]"
+              style={{ fontFamily: 'Arial Black, Inter, sans-serif' }}
+            >
+              SUNLIGHT CITY
+            </p>
           </div>
         </div>
 
